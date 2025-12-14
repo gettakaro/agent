@@ -38,7 +38,12 @@ export class ConversationService {
     return records.map((r) => ({
       role: r.role as 'user' | 'assistant' | 'system',
       content: r.content,
+      toolExecutions: r.toolExecutions as Message['toolExecutions'],
     }));
+  }
+
+  async getMessageRecords(conversationId: string): Promise<MessageRecord[]> {
+    return this.repo.getMessages(conversationId);
   }
 
   async addMessage(
@@ -51,6 +56,7 @@ export class ConversationService {
       {
         role: message.role,
         content: message.content,
+        toolExecutions: message.toolExecutions,
       },
       extra
     );

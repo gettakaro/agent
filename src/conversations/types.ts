@@ -22,8 +22,7 @@ export interface MessageRecord {
   conversationId: string;
   role: string;
   content: string;
-  toolCalls?: unknown;
-  toolResults?: unknown;
+  toolExecutions?: unknown;
   tokenCount?: number;
   latencyMs?: number;
   createdAt: Date;
@@ -32,6 +31,5 @@ export interface MessageRecord {
 export interface MessageCreate {
   role: string;
   content: string;
-  toolCalls?: unknown;
-  toolResults?: unknown;
+  toolExecutions?: unknown;
 }

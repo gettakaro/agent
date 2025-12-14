@@ -5,6 +5,7 @@ import type { Client } from '@takaro/apiclient';
 export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  toolExecutions?: ToolExecution[];
 }
 
 export interface ToolCall {
@@ -19,11 +20,21 @@ export interface ToolResult {
   error?: string;
 }
 
+// Tool execution record with timing metadata
+export interface ToolExecution {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+  result: ToolResult;
+  durationMs: number;
+  startedAt: Date;
+}
+
 // Stream chunk types for real-time responses
 export type StreamChunk =
   | { type: 'text'; content: string }
   | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
-  | { type: 'tool_result'; id: string; result: ToolResult }
+  | { type: 'tool_result'; id: string; name: string; result: ToolResult; durationMs: number }
   | { type: 'done'; usage: TokenUsage };
 
 export interface TokenUsage {

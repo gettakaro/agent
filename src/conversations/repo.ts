@@ -86,11 +86,8 @@ export class ConversationRepo {
         conversation_id: conversationId,
         role: message.role,
         content: message.content,
-        tool_calls: message.toolCalls
-          ? JSON.stringify(message.toolCalls)
-          : null,
-        tool_results: message.toolResults
-          ? JSON.stringify(message.toolResults)
+        tool_calls: message.toolExecutions
+          ? JSON.stringify(message.toolExecutions)
           : null,
         token_count: extra?.tokenCount,
         latency_ms: extra?.latencyMs,
@@ -126,15 +123,10 @@ export class ConversationRepo {
       conversationId: row['conversation_id'] as string,
       role: row['role'] as string,
       content: row['content'] as string,
-      toolCalls: row['tool_calls']
+      toolExecutions: row['tool_calls']
         ? typeof row['tool_calls'] === 'string'
           ? JSON.parse(row['tool_calls'])
           : row['tool_calls']
-        : undefined,
-      toolResults: row['tool_results']
-        ? typeof row['tool_results'] === 'string'
-          ? JSON.parse(row['tool_results'])
-          : row['tool_results']
         : undefined,
       tokenCount: row['token_count'] as number | undefined,
       latencyMs: row['latency_ms'] as number | undefined,

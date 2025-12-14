@@ -449,6 +449,121 @@ select.form-control {
   color: var(--accent-danger);
 }
 
+/* Tool Executions */
+.tool-executions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tool-execution {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-size: 0.875rem;
+}
+
+.tool-execution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.tool-execution-header:hover {
+  background: var(--border-color);
+}
+
+.tool-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.tool-name .icon {
+  font-size: 0.75rem;
+  transition: transform 0.15s ease;
+}
+
+.tool-execution.expanded .tool-name .icon {
+  transform: rotate(90deg);
+}
+
+.tool-meta {
+  display: flex;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.tool-duration {
+  color: var(--text-secondary);
+}
+
+.tool-status {
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.tool-status.success {
+  background: rgba(35, 134, 54, 0.2);
+  color: var(--accent-secondary);
+}
+
+.tool-status.error {
+  background: rgba(248, 81, 73, 0.2);
+  color: var(--accent-danger);
+}
+
+.tool-execution-body {
+  display: none;
+  padding: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.tool-execution.expanded .tool-execution-body {
+  display: block;
+}
+
+.tool-section {
+  margin-bottom: 0.75rem;
+}
+
+.tool-section:last-child {
+  margin-bottom: 0;
+}
+
+.tool-section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.tool-section-content {
+  background: var(--bg-secondary);
+  padding: 0.5rem;
+  border-radius: calc(var(--radius) - 2px);
+  overflow-x: auto;
+}
+
+.tool-section-content pre {
+  margin: 0;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* Chat Input */
 .chat-input {
   display: flex;

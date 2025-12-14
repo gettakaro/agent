@@ -6,6 +6,7 @@ import type {
   AgentResponse,
   ToolContext,
   ToolResult,
+  ToolExecution,
 } from './types.js';
 import type { ILLMProvider } from './providers/types.js';
 import { OpenRouterProvider } from './providers/OpenRouterProvider.js';
@@ -71,9 +72,13 @@ export class AgentRuntime implements IAgent {
         }
 
         // Execute each tool and collect results
+        const toolExecutions: ToolExecution[] = [];
+
         for (const toolCall of response.toolCalls) {
           const tool = this.config.tools.find((t) => t.name === toolCall.name);
           let result: ToolResult;
+          const startedAt = new Date();
+          const toolStartTime = Date.now();
 
           if (!tool) {
             result = {
@@ -93,12 +98,26 @@ export class AgentRuntime implements IAgent {
             }
           }
 
-          // Emit tool result
+          const durationMs = Date.now() - toolStartTime;
+
+          // Track tool execution
+          toolExecutions.push({
+            id: toolCall.id,
+            name: toolCall.name,
+            input: toolCall.input,
+            result,
+            durationMs,
+            startedAt,
+          });
+
+          // Emit tool result with timing
           if (onChunk) {
             onChunk({
               type: 'tool_result',
               id: toolCall.id,
+              name: toolCall.name,
               result,
+              durationMs,
             });
           }
 
@@ -106,6 +125,22 @@ export class AgentRuntime implements IAgent {
           conversationMessages.push({
             role: 'user',
             content: `Tool result for ${toolCall.name} (id: ${toolCall.id}):\n${JSON.stringify(result, null, 2)}`,
+          });
+        }
+
+        // Store tool executions on a response message if there's content
+        if (assistantContent) {
+          responseMessages.push({
+            role: 'assistant',
+            content: assistantContent,
+            toolExecutions,
+          });
+        } else if (toolExecutions.length > 0) {
+          // Even without text content, track tool usage
+          responseMessages.push({
+            role: 'assistant',
+            content: '',
+            toolExecutions,
           });
         }
 

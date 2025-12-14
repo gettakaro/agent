@@ -25,6 +25,40 @@
             <span class="message-role"><%= msg.role %></span>
           </div>
           <div class="message-content"><%= msg.content %></div>
+          <% if (msg.toolExecutions && msg.toolExecutions.length > 0) { %>
+            <div class="tool-executions">
+              <% msg.toolExecutions.forEach((tool, idx) => { %>
+                <div class="tool-execution" data-tool-id="<%= tool.id %>">
+                  <div class="tool-execution-header" onclick="toggleToolExecution(this)">
+                    <span class="tool-name">
+                      <span class="icon">▶</span>
+                      <%= tool.name %>
+                    </span>
+                    <span class="tool-meta">
+                      <span class="tool-duration"><%= tool.durationMs %>ms</span>
+                      <span class="tool-status <%= tool.result.success ? 'success' : 'error' %>">
+                        <%= tool.result.success ? 'success' : 'error' %>
+                      </span>
+                    </span>
+                  </div>
+                  <div class="tool-execution-body">
+                    <div class="tool-section">
+                      <div class="tool-section-label">Input</div>
+                      <div class="tool-section-content">
+                        <pre><%= JSON.stringify(tool.input, null, 2) %></pre>
+                      </div>
+                    </div>
+                    <div class="tool-section">
+                      <div class="tool-section-label">Output</div>
+                      <div class="tool-section-content">
+                        <pre><%= tool.result.error ? tool.result.error : JSON.stringify(tool.result.output, null, 2) %></pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
         </div>
       <% }) %>
     <% } %>
@@ -49,6 +83,13 @@
   const input = document.getElementById('messageInput');
   const conversationId = '<%= conversation.id %>';
 
+  // Track pending tool calls during streaming
+  const pendingTools = new Map();
+
+  function toggleToolExecution(header) {
+    header.parentElement.classList.toggle('expanded');
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const content = input.value.trim();
@@ -60,6 +101,7 @@
 
     // Create assistant message placeholder
     const assistantMsg = addMessage('assistant', '');
+    pendingTools.clear();
 
     // Send to API with SSE
     const response = await fetch('/api/conversations/' + conversationId + '/messages', {
@@ -87,8 +129,11 @@
             if (data.type === 'text') {
               assistantMsg.querySelector('.message-content').textContent += data.content;
             } else if (data.type === 'tool_use') {
-              assistantMsg.querySelector('.message-content').textContent +=
-                '\n[Using tool: ' + data.name + ']\n';
+              // Add pending tool execution UI
+              addPendingToolExecution(assistantMsg, data.id, data.name, data.input);
+            } else if (data.type === 'tool_result') {
+              // Update tool execution with result
+              updateToolExecutionResult(assistantMsg, data.id, data.name, data.result, data.durationMs);
             } else if (data.type === 'error' || data.error) {
               assistantMsg.classList.add('message-error');
               assistantMsg.querySelector('.message-content').textContent =
@@ -113,10 +158,96 @@
     div.className = 'message message-' + role;
     div.innerHTML =
       '<div class="message-header"><span class="message-role">' + role + '</span></div>' +
-      '<div class="message-content">' + content + '</div>';
+      '<div class="message-content">' + escapeHtml(content) + '</div>';
     messagesContainer.appendChild(div);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     return div;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function addPendingToolExecution(msgEl, toolId, toolName, input) {
+    let container = msgEl.querySelector('.tool-executions');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'tool-executions';
+      msgEl.appendChild(container);
+    }
+
+    const toolEl = document.createElement('div');
+    toolEl.className = 'tool-execution';
+    toolEl.dataset.toolId = toolId;
+    toolEl.innerHTML = `
+      <div class="tool-execution-header" onclick="toggleToolExecution(this)">
+        <span class="tool-name">
+          <span class="icon">▶</span>
+          ${escapeHtml(toolName)}
+        </span>
+        <span class="tool-meta">
+          <span class="tool-duration">running...</span>
+          <span class="tool-status" style="background: rgba(210, 153, 34, 0.2); color: var(--accent-warning);">pending</span>
+        </span>
+      </div>
+      <div class="tool-execution-body">
+        <div class="tool-section">
+          <div class="tool-section-label">Input</div>
+          <div class="tool-section-content">
+            <pre>${escapeHtml(JSON.stringify(input, null, 2))}</pre>
+          </div>
+        </div>
+        <div class="tool-section tool-output-section">
+          <div class="tool-section-label">Output</div>
+          <div class="tool-section-content">
+            <pre>Waiting for result...</pre>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(toolEl);
+    pendingTools.set(toolId, { name: toolName, input });
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  function updateToolExecutionResult(msgEl, toolId, toolName, result, durationMs) {
+    const toolEl = msgEl.querySelector(`.tool-execution[data-tool-id="${toolId}"]`);
+    if (!toolEl) {
+      // Tool wasn't tracked, create it with result
+      addPendingToolExecution(msgEl, toolId, toolName, {});
+      setTimeout(() => updateToolExecutionResult(msgEl, toolId, toolName, result, durationMs), 10);
+      return;
+    }
+
+    // Update duration
+    const durationEl = toolEl.querySelector('.tool-duration');
+    if (durationEl) {
+      durationEl.textContent = durationMs + 'ms';
+    }
+
+    // Update status
+    const statusEl = toolEl.querySelector('.tool-status');
+    if (statusEl) {
+      if (result.success) {
+        statusEl.className = 'tool-status success';
+        statusEl.textContent = 'success';
+      } else {
+        statusEl.className = 'tool-status error';
+        statusEl.textContent = 'error';
+      }
+    }
+
+    // Update output
+    const outputSection = toolEl.querySelector('.tool-output-section .tool-section-content pre');
+    if (outputSection) {
+      outputSection.textContent = result.error
+        ? result.error
+        : JSON.stringify(result.output, null, 2);
+    }
+
+    pendingTools.delete(toolId);
   }
 
   // Scroll to bottom on load
