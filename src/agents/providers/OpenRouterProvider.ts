@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import type { ToolDefinition, StreamChunk, Message } from '../types.js';
 import type { ILLMProvider, ChatOptions, ProviderResponse } from './types.js';
 import { config } from '../../config.js';
+import { formatError } from '../../utils/formatError.js';
 
 export class OpenRouterProvider implements ILLMProvider {
   private client: OpenAI;
@@ -37,14 +38,20 @@ export class OpenRouterProvider implements ILLMProvider {
       },
     }));
 
-    const stream = await this.client.chat.completions.create({
-      model: options.model,
-      max_tokens: options.maxTokens || 4096,
-      temperature: options.temperature,
-      messages: openaiMessages,
-      tools: openaiTools.length > 0 ? openaiTools : undefined,
-      stream: true,
-    });
+    let stream;
+    try {
+      stream = await this.client.chat.completions.create({
+        model: options.model,
+        max_tokens: options.maxTokens || 4096,
+        temperature: options.temperature,
+        messages: openaiMessages,
+        tools: openaiTools.length > 0 ? openaiTools : undefined,
+        stream: true,
+      });
+    } catch (err) {
+      console.error('OpenRouter API error:', formatError(err));
+      throw err;
+    }
 
     let textContent = '';
     const toolCalls: Array<{

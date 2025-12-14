@@ -1,4 +1,5 @@
 import type { JSONSchema7 } from 'json-schema';
+import type { Client } from '@takaro/apiclient';
 
 // Message types
 export interface Message {
@@ -43,6 +44,8 @@ export interface ToolContext {
   agentId: string;
   agentVersion: string;
   state: Record<string, unknown>;
+  userId?: string;
+  takaroClient?: Client;
 }
 
 // Tool definition - model agnostic

@@ -16,6 +16,11 @@
       <li><a href="/agents">Agents</a></li>
       <li><a href="/conversations">Conversations</a></li>
       <li><a href="/new" class="btn btn-primary">New Chat</a></li>
+      <% if (typeof user !== 'undefined' && user) { %>
+        <li class="nav-user">
+          <span class="badge badge-outline"><%= user.email %></span>
+        </li>
+      <% } %>
     </ul>
   </nav>
 

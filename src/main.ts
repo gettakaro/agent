@@ -3,9 +3,13 @@ import { config } from './config.js';
 import { agentRegistry } from './agents/registry.js';
 import { ModuleWriterFactory } from './agents/module-writer/index.js';
 import { getDb, closeDb } from './db/connection.js';
+import { initServiceClient } from './takaro/client.js';
 
 async function main() {
   console.log('Starting Takaro Agent service...');
+
+  // Initialize Takaro client (service account mode if credentials provided)
+  await initServiceClient();
 
   // Register agents
   agentRegistry.register(new ModuleWriterFactory());

@@ -13,6 +13,10 @@ export class ConversationService {
     return this.repo.list();
   }
 
+  async listByUserId(userId: string): Promise<Conversation[]> {
+    return this.repo.listByUserId(userId);
+  }
+
   async create(data: ConversationCreate): Promise<Conversation> {
     return this.repo.create(data);
   }

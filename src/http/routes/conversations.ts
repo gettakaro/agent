@@ -1,27 +1,34 @@
-import { Router, Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { Router, Response } from 'express';
 import { ConversationService } from '../../conversations/service.js';
 import { agentRegistry } from '../../agents/registry.js';
+import {
+  authMiddleware,
+  AuthenticatedRequest,
+} from '../middleware/auth.js';
 import type { StreamChunk } from '../../agents/types.js';
+import { formatError } from '../../utils/formatError.js';
 
 const router = Router();
 const conversationService = new ConversationService();
 
+// Apply auth middleware to all API routes
+router.use(authMiddleware({ redirect: false }));
+
 // List conversations
-router.get('/', async (_req: Request, res: Response) => {
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const conversations = await conversationService.list();
+    const conversations = await conversationService.listByUserId(req.user!.id);
     res.json({ data: conversations });
   } catch (error) {
-    console.error('Error listing conversations:', error);
+    console.error('Error listing conversations:', formatError(error));
     res.status(500).json({ error: 'Failed to list conversations' });
   }
 });
 
 // Create conversation
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { agentId, agentVersion, userId, initialMessage } = req.body;
+    const { agentId, agentVersion, initialMessage } = req.body;
 
     if (!agentId) {
       res.status(400).json({ error: 'agentId is required' });
@@ -43,7 +50,7 @@ router.post('/', async (req: Request, res: Response) => {
     const conversation = await conversationService.create({
       agentId,
       agentVersion: version,
-      userId,
+      userId: req.user!.id,
     });
 
     // If initial message provided, process it
@@ -61,6 +68,8 @@ router.post('/', async (req: Request, res: Response) => {
         agentId,
         agentVersion: version,
         state: conversation.state || {},
+        userId: req.user!.id,
+        takaroClient: req.takaroClient,
       };
 
       const response = await agent.chat(messages, context);
@@ -91,51 +100,82 @@ router.post('/', async (req: Request, res: Response) => {
 
     res.json({ data: conversation });
   } catch (error) {
-    console.error('Error creating conversation:', error);
+    console.error('Error creating conversation:', formatError(error));
     const message = error instanceof Error ? error.message : 'Failed to create conversation';
     res.status(500).json({ error: message });
   }
 });
 
 // Get conversation
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const conversation = await conversationService.get(req.params['id']!);
     if (!conversation) {
       res.status(404).json({ error: 'Conversation not found' });
       return;
     }
+
+    // Check ownership
+    if (conversation.userId !== req.user!.id) {
+      res.status(403).json({ error: 'Forbidden' });
+      return;
+    }
+
     res.json({ data: conversation });
   } catch (error) {
-    console.error('Error getting conversation:', error);
+    console.error('Error getting conversation:', formatError(error));
     res.status(500).json({ error: 'Failed to get conversation' });
   }
 });
 
 // Delete conversation
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const conversation = await conversationService.get(req.params['id']!);
+    if (!conversation) {
+      res.status(404).json({ error: 'Conversation not found' });
+      return;
+    }
+
+    // Check ownership
+    if (conversation.userId !== req.user!.id) {
+      res.status(403).json({ error: 'Forbidden' });
+      return;
+    }
+
     await conversationService.delete(req.params['id']!);
     res.json({ success: true });
   } catch (error) {
-    console.error('Error deleting conversation:', error);
+    console.error('Error deleting conversation:', formatError(error));
     res.status(500).json({ error: 'Failed to delete conversation' });
   }
 });
 
 // Get messages
-router.get('/:id/messages', async (req: Request, res: Response) => {
+router.get('/:id/messages', async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const conversation = await conversationService.get(req.params['id']!);
+    if (!conversation) {
+      res.status(404).json({ error: 'Conversation not found' });
+      return;
+    }
+
+    // Check ownership
+    if (conversation.userId !== req.user!.id) {
+      res.status(403).json({ error: 'Forbidden' });
+      return;
+    }
+
     const messages = await conversationService.getMessages(req.params['id']!);
     res.json({ data: messages });
   } catch (error) {
-    console.error('Error getting messages:', error);
+    console.error('Error getting messages:', formatError(error));
     res.status(500).json({ error: 'Failed to get messages' });
   }
 });
 
 // Send message (SSE streaming response)
-router.post('/:id/messages', async (req: Request, res: Response) => {
+router.post('/:id/messages', async (req: AuthenticatedRequest, res: Response) => {
   const conversationId = req.params['id']!;
   const { content } = req.body;
 
@@ -155,6 +195,12 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
     const conversation = await conversationService.get(conversationId);
     if (!conversation) {
       res.status(404).json({ error: 'Conversation not found' });
+      return;
+    }
+
+    // Check ownership
+    if (conversation.userId !== req.user!.id) {
+      res.status(403).json({ error: 'Forbidden' });
       return;
     }
 
@@ -184,6 +230,8 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
       agentId: conversation.agentId,
       agentVersion: conversation.agentVersion,
       state: conversation.state || {},
+      userId: req.user!.id,
+      takaroClient: req.takaroClient,
     };
 
     const onChunk = (chunk: StreamChunk) => {
@@ -210,7 +258,7 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
 
     res.end();
   } catch (error) {
-    console.error('Error processing message:', error);
+    console.error('Error processing message:', formatError(error));
     const message = error instanceof Error ? error.message : 'Failed to process message';
 
     if (sseStarted) {

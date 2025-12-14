@@ -1,13 +1,20 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { ConversationService } from '../../conversations/service.js';
 import { agentRegistry } from '../../agents/registry.js';
+import {
+  authMiddleware,
+  AuthenticatedRequest,
+} from '../middleware/auth.js';
 
 const router = Router();
 const conversationService = new ConversationService();
 
+// Apply auth middleware to all routes
+router.use(authMiddleware({ redirect: true }));
+
 // Home / Dashboard
-router.get('/', async (_req: Request, res: Response) => {
-  const conversations = await conversationService.list();
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+  const conversations = await conversationService.listByUserId(req.user!.id);
   const agents = agentRegistry.listAgents();
 
   res.render('index', {
@@ -15,11 +22,12 @@ router.get('/', async (_req: Request, res: Response) => {
     conversationCount: conversations.length,
     agentCount: agents.length,
     recentConversations: conversations.slice(0, 5),
+    user: req.user,
   });
 });
 
 // Agents list
-router.get('/agents', async (_req: Request, res: Response) => {
+router.get('/agents', async (req: AuthenticatedRequest, res: Response) => {
   const agentIds = agentRegistry.listAgents();
   const agents = agentIds.map((id) => {
     const factory = agentRegistry.getFactory(id)!;
@@ -33,27 +41,40 @@ router.get('/agents', async (_req: Request, res: Response) => {
   res.render('agents', {
     title: 'Agents',
     agents,
+    user: req.user,
   });
 });
 
 // Conversations list
-router.get('/conversations', async (_req: Request, res: Response) => {
-  const conversations = await conversationService.list();
+router.get('/conversations', async (req: AuthenticatedRequest, res: Response) => {
+  const conversations = await conversationService.listByUserId(req.user!.id);
 
   res.render('conversations', {
     title: 'Conversations',
     conversations,
+    user: req.user,
   });
 });
 
 // Single conversation view
-router.get('/conversations/:id', async (req: Request, res: Response) => {
+router.get('/conversations/:id', async (req: AuthenticatedRequest, res: Response) => {
   const conversation = await conversationService.get(req.params['id']!);
 
   if (!conversation) {
     res.status(404).render('error', {
       title: 'Not Found',
       message: 'Conversation not found',
+      user: req.user,
+    });
+    return;
+  }
+
+  // Check ownership
+  if (conversation.userId !== req.user!.id) {
+    res.status(403).render('error', {
+      title: 'Forbidden',
+      message: 'You do not have access to this conversation',
+      user: req.user,
     });
     return;
   }
@@ -64,11 +85,12 @@ router.get('/conversations/:id', async (req: Request, res: Response) => {
     title: `Chat - ${conversation.agentId}`,
     conversation,
     messages,
+    user: req.user,
   });
 });
 
 // New conversation form
-router.get('/new', async (_req: Request, res: Response) => {
+router.get('/new', async (req: AuthenticatedRequest, res: Response) => {
   const agentIds = agentRegistry.listAgents();
   const agents = agentIds.map((id) => {
     const factory = agentRegistry.getFactory(id)!;
@@ -82,6 +104,7 @@ router.get('/new', async (_req: Request, res: Response) => {
   res.render('new', {
     title: 'New Conversation',
     agents,
+    user: req.user,
   });
 });
 
