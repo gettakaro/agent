@@ -5,18 +5,19 @@
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "tsc --watch & sleep 2 && node --watch dist/main.js",
-    "build": "tsc",
+    "dev": "npm run build && (tsc --watch & node --watch dist/main.js)",
+    "build": "tsc && cp -r src/views dist/ && cp -r src/public dist/",
     "start": "node dist/main.js",
     "db:migrate": "tsc && node dist/db/migrate.js",
     "db:rollback": "tsc && node dist/db/rollback.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "openai": "^4.77.0",
     "cors": "^2.8.5",
+    "ejs": "^3.1.10",
     "express": "^4.21.2",
     "knex": "^3.1.0",
+    "openai": "^4.77.0",
     "pg": "^8.13.1",
     "uuid": "^11.0.3",
     "zod": "^3.24.1"

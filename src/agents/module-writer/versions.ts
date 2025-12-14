@@ -4,7 +4,7 @@ import { moduleWriterTools } from './tools/index.js';
 
 export const MODULE_WRITER_VERSIONS: Record<string, AgentVersionConfig> = {
   '1.0.0': {
-    model: 'x-ai/grok-3-fast-beta',
+    model: 'x-ai/grok-code-fast-1',
     systemPrompt: SYSTEM_PROMPT_V1,
     tools: moduleWriterTools,
     temperature: 0.7,
