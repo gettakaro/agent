@@ -1,0 +1,32 @@
+{
+  "name": "takaro-agent",
+  "version": "0.1.0",
+  "description": "AI agents for Takaro module development",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsc --watch & sleep 2 && node --watch dist/main.js",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "db:migrate": "tsc && node dist/db/migrate.js",
+    "db:rollback": "tsc && node dist/db/rollback.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openai": "^4.77.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "knex": "^3.1.0",
+    "pg": "^8.13.1",
+    "uuid": "^11.0.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/json-schema": "^7.0.15",
+    "@types/node": "^22.10.2",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.7.2"
+  }
+}

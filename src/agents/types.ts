@@ -1,0 +1,87 @@
+import type { JSONSchema7 } from 'json-schema';
+
+// Message types
+export interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface ToolCall {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+}
+
+export interface ToolResult {
+  success: boolean;
+  output: unknown;
+  error?: string;
+}
+
+// Stream chunk types for real-time responses
+export type StreamChunk =
+  | { type: 'text'; content: string }
+  | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
+  | { type: 'tool_result'; id: string; result: ToolResult }
+  | { type: 'done'; usage: TokenUsage };
+
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
+// Agent response after chat completes
+export interface AgentResponse {
+  messages: Message[];
+  usage: TokenUsage;
+  latencyMs: number;
+}
+
+// Tool context passed to tool execution
+export interface ToolContext {
+  conversationId: string;
+  agentId: string;
+  agentVersion: string;
+  state: Record<string, unknown>;
+}
+
+// Tool definition - model agnostic
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  parameters: JSONSchema7;
+  execute: (
+    args: Record<string, unknown>,
+    context: ToolContext
+  ) => Promise<ToolResult>;
+}
+
+// Agent version configuration
+export interface AgentVersionConfig {
+  model: string;
+  systemPrompt: string;
+  tools: ToolDefinition[];
+  temperature?: number;
+  maxTokens?: number;
+}
+
+// Agent interface
+export interface IAgent {
+  readonly id: string;
+  readonly version: string;
+  readonly config: AgentVersionConfig;
+
+  chat(
+    messages: Message[],
+    context: ToolContext,
+    onChunk?: (chunk: StreamChunk) => void
+  ): Promise<AgentResponse>;
+}
+
+// Agent factory interface
+export interface IAgentFactory {
+  readonly agentId: string;
+  createAgent(version: string): IAgent;
+  listVersions(): string[];
+  getDefaultVersion(): string;
+}
