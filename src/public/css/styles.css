@@ -642,3 +642,118 @@ select.form-control {
     max-width: 95%;
   }
 }
+
+/* Settings Page */
+.provider-list {
+  padding: 1rem;
+}
+
+.provider-item {
+  padding: 1rem 0;
+}
+
+.provider-item:first-child {
+  padding-top: 0;
+}
+
+.provider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.provider-info h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.provider-info .text-muted {
+  font-size: 0.875rem;
+}
+
+.provider-status {
+  flex-shrink: 0;
+}
+
+.provider-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.provider-actions .text-small {
+  font-size: 0.75rem;
+}
+
+.provider-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1rem 0;
+}
+
+.form-inline {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-inline .form-control {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Alerts */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  border: 1px solid;
+}
+
+.alert-success {
+  background: rgba(35, 134, 54, 0.1);
+  border-color: var(--accent-secondary);
+  color: var(--accent-secondary);
+}
+
+.alert-error {
+  background: rgba(248, 81, 73, 0.1);
+  border-color: var(--accent-danger);
+  color: var(--accent-danger);
+}
+
+/* Badge variants */
+.badge-success {
+  background: var(--accent-secondary);
+  color: white;
+}
+
+/* Button variants */
+.btn-danger-outline {
+  background: transparent;
+  border-color: var(--accent-danger);
+  color: var(--accent-danger);
+}
+
+.btn-danger-outline:hover {
+  background: rgba(248, 81, 73, 0.1);
+}
+
+/* Card header adjustments for settings */
+.card-header {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.card-header h2 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.card-header p {
+  font-size: 0.875rem;
+}

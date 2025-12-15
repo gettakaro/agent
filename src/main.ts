@@ -4,6 +4,7 @@ import { agentRegistry } from './agents/registry.js';
 import { ModuleWriterFactory } from './agents/module-writer/index.js';
 import { getDb, closeDb } from './db/connection.js';
 import { initServiceClient } from './takaro/client.js';
+import { initRedis, closeRedis } from './redis/client.js';
 
 async function main() {
   console.log('Starting Takaro Agent service...');
@@ -25,6 +26,14 @@ async function main() {
     process.exit(1);
   }
 
+  // Initialize Redis
+  try {
+    await initRedis();
+  } catch (err) {
+    console.error('Failed to connect to Redis:', err);
+    process.exit(1);
+  }
+
   // Create and start Express app
   const app = createApp();
 
@@ -38,12 +47,19 @@ async function main() {
     console.log('  DELETE /conversations/:id');
     console.log('  GET  /conversations/:id/messages');
     console.log('  POST /conversations/:id/messages (SSE)');
+    console.log('  POST /auth/openrouter (Save API key)');
+    console.log('  DELETE /auth/openrouter (Remove API key)');
+    console.log('  GET  /auth/claude (OAuth initiate)');
+    console.log('  GET  /auth/claude/callback (OAuth callback)');
+    console.log('  DELETE /auth/claude (Disconnect)');
+    console.log('  GET  /auth/status (All providers)');
   });
 
   // Graceful shutdown
   const shutdown = async () => {
     console.log('Shutting down...');
     server.close();
+    await closeRedis();
     await closeDb();
     process.exit(0);
   };

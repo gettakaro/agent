@@ -34,6 +34,7 @@ export class ConversationRepo {
         agent_version: data.agentVersion,
         user_id: data.userId,
         title: data.title,
+        provider: data.provider || 'openrouter',
       })
       .returning('*');
 
@@ -104,6 +105,7 @@ export class ConversationRepo {
       agentVersion: row['agent_version'] as string,
       userId: row['user_id'] as string | undefined,
       title: row['title'] as string | undefined,
+      provider: (row['provider'] as Conversation['provider']) || 'openrouter',
       metadata:
         typeof row['metadata'] === 'string'
           ? JSON.parse(row['metadata'])

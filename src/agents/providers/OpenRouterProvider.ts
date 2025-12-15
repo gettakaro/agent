@@ -1,16 +1,15 @@
 import OpenAI from 'openai';
 import type { ToolDefinition, StreamChunk, Message } from '../types.js';
 import type { ILLMProvider, ChatOptions, ProviderResponse } from './types.js';
-import { config } from '../../config.js';
 import { formatError } from '../../utils/formatError.js';
 
 export class OpenRouterProvider implements ILLMProvider {
   private client: OpenAI;
 
-  constructor() {
+  constructor(apiKey: string) {
     this.client = new OpenAI({
       baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: config.openrouterApiKey,
+      apiKey,
     });
   }
 

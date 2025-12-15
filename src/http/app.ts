@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { config } from '../config.js';
 import { conversationRoutes } from './routes/conversations.js';
 import { viewRoutes } from './routes/views.js';
+import authRoutes from './routes/auth.js';
 import { formatError } from '../utils/formatError.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -57,6 +58,7 @@ export function createApp(): Express {
   app.use('/', viewRoutes);
 
   // API routes
+  app.use('/auth', authRoutes);
   app.use('/api/conversations', conversationRoutes);
 
   // Error handler

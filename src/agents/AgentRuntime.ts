@@ -10,18 +10,27 @@ import type {
 } from './types.js';
 import type { ILLMProvider } from './providers/types.js';
 import { OpenRouterProvider } from './providers/OpenRouterProvider.js';
+import { AnthropicProvider } from './providers/AnthropicProvider.js';
 
 export class AgentRuntime implements IAgent {
   readonly id: string;
   readonly version: string;
   readonly config: AgentVersionConfig;
-  private provider: ILLMProvider;
 
   constructor(id: string, version: string, config: AgentVersionConfig) {
     this.id = id;
     this.version = version;
     this.config = config;
-    this.provider = new OpenRouterProvider();
+  }
+
+  private getProvider(context: ToolContext): ILLMProvider {
+    if (context.provider === 'anthropic' && context.anthropicAccessToken) {
+      return new AnthropicProvider(context.anthropicAccessToken);
+    }
+    if (context.openrouterApiKey) {
+      return new OpenRouterProvider(context.openrouterApiKey);
+    }
+    throw new Error('No valid provider credentials available');
   }
 
   async chat(
@@ -40,10 +49,12 @@ export class AgentRuntime implements IAgent {
     const maxIterations = 10; // Safety limit
     let iterations = 0;
 
+    const provider = this.getProvider(context);
+
     while (continueLoop && iterations < maxIterations) {
       iterations++;
 
-      const response = await this.provider.chat(
+      const response = await provider.chat(
         conversationMessages,
         this.config.systemPrompt,
         this.config.tools,

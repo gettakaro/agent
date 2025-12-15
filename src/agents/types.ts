@@ -49,6 +49,8 @@ export interface AgentResponse {
   latencyMs: number;
 }
 
+export type LLMProvider = 'openrouter' | 'anthropic';
+
 // Tool context passed to tool execution
 export interface ToolContext {
   conversationId: string;
@@ -57,6 +59,9 @@ export interface ToolContext {
   state: Record<string, unknown>;
   userId?: string;
   takaroClient?: Client;
+  provider?: LLMProvider;
+  anthropicAccessToken?: string;
+  openrouterApiKey?: string;
 }
 
 // Tool definition - model agnostic

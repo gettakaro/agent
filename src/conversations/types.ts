@@ -1,9 +1,12 @@
+import type { LLMProvider } from '../agents/types.js';
+
 export interface Conversation {
   id: string;
   agentId: string;
   agentVersion: string;
   userId?: string;
   title?: string;
+  provider: LLMProvider;
   metadata: Record<string, unknown>;
   state: Record<string, unknown>;
   createdAt: Date;
@@ -15,6 +18,7 @@ export interface ConversationCreate {
   agentVersion: string;
   userId?: string;
   title?: string;
+  provider?: LLMProvider;
 }
 
 export interface MessageRecord {
