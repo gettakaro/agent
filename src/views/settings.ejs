@@ -3,21 +3,11 @@
 <div class="page">
   <h1>Settings</h1>
 
-  <% if (typeof claudeAuthResult !== 'undefined' && claudeAuthResult) { %>
-    <div class="alert <%= claudeAuthResult === 'success' ? 'alert-success' : 'alert-error' %>">
-      <% if (claudeAuthResult === 'success') { %>
-        Claude account connected successfully.
-      <% } else { %>
-        Failed to connect Claude: <%= typeof claudeAuthMessage !== 'undefined' ? claudeAuthMessage : 'Unknown error' %>
-      <% } %>
-    </div>
-  <% } %>
-
   <div id="flash-message" class="alert" style="display: none;"></div>
 
   <div class="card">
     <div class="card-header">
-      <h2>API Providers</h2>
+      <h2>API Provider</h2>
       <p class="text-muted">Configure your API credentials to use the agent service.</p>
     </div>
 
@@ -64,33 +54,6 @@
           <p class="text-muted text-small">
             Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>
           </p>
-        </div>
-      </div>
-
-      <hr class="provider-divider" />
-
-      <!-- Claude -->
-      <div class="provider-item">
-        <div class="provider-header">
-          <div class="provider-info">
-            <h3>Claude</h3>
-            <p class="text-muted">Use your Claude Pro or Max subscription via OAuth.</p>
-          </div>
-          <div class="provider-status">
-            <% if (providers.claude.connected) { %>
-              <span class="badge badge-success">Connected</span>
-            <% } else { %>
-              <span class="badge badge-outline">Not connected</span>
-            <% } %>
-          </div>
-        </div>
-
-        <div class="provider-actions">
-          <% if (providers.claude.connected) { %>
-            <button type="button" class="btn btn-danger-outline" onclick="disconnectClaude()">Disconnect</button>
-          <% } else { %>
-            <a href="/auth/claude" class="btn btn-primary">Connect with Claude</a>
-          <% } %>
         </div>
       </div>
     </div>
@@ -147,23 +110,6 @@
       }
     } catch (err) {
       showFlash('Failed to remove API key', 'error');
-    }
-  }
-
-  async function disconnectClaude() {
-    if (!confirm('Are you sure you want to disconnect your Claude account?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch('/auth/claude', { method: 'DELETE' });
-      if (response.ok) {
-        location.reload();
-      } else {
-        showFlash('Failed to disconnect Claude', 'error');
-      }
-    } catch (err) {
-      showFlash('Failed to disconnect Claude', 'error');
     }
   }
 </script>

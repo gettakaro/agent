@@ -10,7 +10,6 @@ import type {
 } from './types.js';
 import type { ILLMProvider } from './providers/types.js';
 import { OpenRouterProvider } from './providers/OpenRouterProvider.js';
-import { AnthropicProvider } from './providers/AnthropicProvider.js';
 
 export class AgentRuntime implements IAgent {
   readonly id: string;
@@ -24,13 +23,10 @@ export class AgentRuntime implements IAgent {
   }
 
   private getProvider(context: ToolContext): ILLMProvider {
-    if (context.provider === 'anthropic' && context.anthropicAccessToken) {
-      return new AnthropicProvider(context.anthropicAccessToken);
-    }
     if (context.openrouterApiKey) {
       return new OpenRouterProvider(context.openrouterApiKey);
     }
-    throw new Error('No valid provider credentials available');
+    throw new Error('No OpenRouter API key available. Please configure your API key in settings.');
   }
 
   async chat(

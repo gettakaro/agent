@@ -1,86 +1,12 @@
 import { Router, Response } from 'express';
-import {
-  generatePKCEChallenge,
-  buildAuthorizationUrl,
-  exchangeCodeForTokens,
-} from '../../auth/claude-oauth.js';
-import { ClaudeTokenService } from '../../auth/claude-token.service.js';
 import { ApiKeyService } from '../../auth/api-key.service.js';
-import { storePKCEVerifier, getPKCEVerifier } from '../../redis/client.js';
 import {
   authMiddleware,
   type AuthenticatedRequest,
 } from '../middleware/auth.js';
-import { config } from '../../config.js';
 
 const router = Router();
-const claudeTokenService = new ClaudeTokenService();
 const apiKeyService = new ApiKeyService();
-
-// Initiate Claude OAuth flow
-router.get('/claude', authMiddleware({ redirect: false }), async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { codeVerifier, codeChallenge, state } = generatePKCEChallenge();
-
-    // Store verifier in Redis with state as key
-    await storePKCEVerifier(state, codeVerifier);
-
-    const authUrl = buildAuthorizationUrl(state, codeChallenge);
-    res.redirect(authUrl);
-  } catch (error) {
-    console.error('Failed to initiate Claude OAuth:', error);
-    res.status(500).json({ error: 'Failed to initiate OAuth flow' });
-  }
-});
-
-// OAuth callback
-router.get('/claude/callback', authMiddleware({ redirect: false }), async (req: AuthenticatedRequest, res: Response) => {
-  const { code, state, error, error_description } = req.query;
-
-  // Redirect to settings page after OAuth
-  const baseUrl = config.appBaseUrl || `http://localhost:${config.port}`;
-  const settingsUrl = `${baseUrl}/settings`;
-
-  if (error) {
-    console.error('OAuth error:', error, error_description);
-    return res.redirect(`${settingsUrl}?claude_auth=error&message=${encodeURIComponent(String(error_description || error))}`);
-  }
-
-  if (!code || !state) {
-    return res.redirect(`${settingsUrl}?claude_auth=error&message=${encodeURIComponent('Missing code or state')}`);
-  }
-
-  try {
-    // Retrieve and delete the PKCE verifier
-    const codeVerifier = await getPKCEVerifier(String(state));
-
-    if (!codeVerifier) {
-      return res.redirect(`${settingsUrl}?claude_auth=error&message=${encodeURIComponent('Invalid or expired state')}`);
-    }
-
-    // Exchange code for tokens
-    const tokens = await exchangeCodeForTokens(String(code), codeVerifier);
-
-    // Store tokens for the user
-    await claudeTokenService.saveToken(req.user!.id, tokens);
-
-    res.redirect(`${settingsUrl}?claude_auth=success`);
-  } catch (error) {
-    console.error('OAuth callback failed:', error);
-    res.redirect(`${settingsUrl}?claude_auth=error&message=${encodeURIComponent('Token exchange failed')}`);
-  }
-});
-
-// Disconnect Claude account
-router.delete('/claude', authMiddleware({ redirect: false }), async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    await claudeTokenService.deleteToken(req.user!.id);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Failed to disconnect Claude:', error);
-    res.status(500).json({ error: 'Failed to disconnect Claude account' });
-  }
-});
 
 // Save OpenRouter API key
 router.post('/openrouter', authMiddleware({ redirect: false }), async (req: AuthenticatedRequest, res: Response) => {
@@ -110,18 +36,16 @@ router.delete('/openrouter', authMiddleware({ redirect: false }), async (req: Au
   }
 });
 
-// Check all provider connection statuses
+// Check provider connection status
 router.get('/status', authMiddleware({ redirect: false }), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, 'openrouter');
-    const hasClaude = await claudeTokenService.hasToken(req.user!.id);
 
     res.json({
       providers: {
         openrouter: { connected: hasOpenRouter },
-        claude: { connected: hasClaude },
       },
-      hasAnyProvider: hasOpenRouter || hasClaude,
+      hasAnyProvider: hasOpenRouter,
     });
   } catch (error) {
     console.error('Failed to check auth status:', error);

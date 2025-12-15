@@ -27,20 +27,3 @@ export async function closeRedis(): Promise<void> {
     redis = null;
   }
 }
-
-// PKCE verifier storage for OAuth flow
-const PKCE_TTL_SECONDS = 600; // 10 minutes
-
-export async function storePKCEVerifier(state: string, verifier: string): Promise<void> {
-  const r = getRedis();
-  await r.setEx(`pkce:${state}`, PKCE_TTL_SECONDS, verifier);
-}
-
-export async function getPKCEVerifier(state: string): Promise<string | null> {
-  const r = getRedis();
-  const verifier = await r.get(`pkce:${state}`);
-  if (verifier) {
-    await r.del(`pkce:${state}`);
-  }
-  return verifier;
-}

@@ -6,12 +6,10 @@ import {
   AuthenticatedRequest,
 } from '../middleware/auth.js';
 import { ApiKeyService } from '../../auth/api-key.service.js';
-import { ClaudeTokenService } from '../../auth/claude-token.service.js';
 
 const router = Router();
 const conversationService = new ConversationService();
 const apiKeyService = new ApiKeyService();
-const claudeTokenService = new ClaudeTokenService();
 
 // Apply auth middleware to all routes
 router.use(authMiddleware({ redirect: true }));
@@ -115,20 +113,12 @@ router.get('/new', async (req: AuthenticatedRequest, res: Response) => {
 // Settings page
 router.get('/settings', async (req: AuthenticatedRequest, res: Response) => {
   const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, 'openrouter');
-  const hasClaude = await claudeTokenService.hasToken(req.user!.id);
-
-  // Check for OAuth callback result from query params
-  const claudeAuthResult = req.query['claude_auth'] as string | undefined;
-  const claudeAuthMessage = req.query['message'] as string | undefined;
 
   res.render('settings', {
     title: 'Settings',
     providers: {
       openrouter: { connected: hasOpenRouter },
-      claude: { connected: hasClaude },
     },
-    claudeAuthResult,
-    claudeAuthMessage,
     user: req.user,
   });
 });

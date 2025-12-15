@@ -14,10 +14,6 @@ const configSchema = z.object({
     .transform((s) => (s ? s.split(',').map((o) => o.trim()) : [])),
   takaroUsername: z.string().optional(),
   takaroPassword: z.string().optional(),
-  // Claude OAuth configuration
-  claudeOauthClientId: z.string().default('9d1c250a-e61b-44d9-88ed-5944d1962f5e'),
-  claudeOauthRedirectUri: z.string().url().optional(),
-  appBaseUrl: z.string().url().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -33,9 +29,6 @@ function loadConfig(): Config {
     corsOrigins: process.env['CORS_ORIGINS'],
     takaroUsername: process.env['TAKARO_USERNAME'],
     takaroPassword: process.env['TAKARO_PASSWORD'],
-    claudeOauthClientId: process.env['CLAUDE_OAUTH_CLIENT_ID'],
-    claudeOauthRedirectUri: process.env['CLAUDE_OAUTH_REDIRECT_URI'],
-    appBaseUrl: process.env['APP_BASE_URL'],
   };
 
   const result = configSchema.safeParse(raw);
