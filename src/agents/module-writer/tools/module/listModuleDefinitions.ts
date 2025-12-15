@@ -1,4 +1,4 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../types.js';
+import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
 
 export const listModuleDefinitions: ToolDefinition = {
   name: 'listModuleDefinitions',

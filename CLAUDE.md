@@ -49,12 +49,19 @@ HTTP Request → Auth Middleware → Conversation Route → AgentRuntime → LLM
 
 ### Module Writer Agent (`src/agents/module-writer/`)
 
-The current agent builds Takaro modules. It maintains module state in `context.state.module` and provides tools:
-- `createModule` - Initialize module metadata
-- `addCommand`, `addHook`, `addCronJob`, `addFunction`, `addPermission` - Add components
-- `setConfigSchema` - Define configuration
-- `validateModule` - Check for errors
-- `exportModule` - Generate final module JSON
+The module-writer agent builds Takaro modules via direct API calls. It maintains state in `context.state` (moduleId, versionId, moduleName).
+
+**Tools** (`src/agents/module-writer/tools/`) - 32 tools organized by subdirectory:
+
+| Directory | Tools |
+|-----------|-------|
+| `module/` | `createModule`, `updateModule`, `deleteModule`, `getModule`, `listModuleDefinitions`, `installModule`, `uninstallModule` |
+| `command/` | `addCommand`, `updateCommand`, `deleteCommand`, `getCommand`, `searchCommands`, `triggerCommand` |
+| `hook/` | `addHook`, `updateHook`, `deleteHook`, `getHook`, `searchHooks`, `triggerHook` |
+| `cronjob/` | `addCronJob`, `updateCronJob`, `deleteCronJob`, `getCronJob`, `searchCronJobs`, `triggerCronJob` |
+| `function/` | `addFunction`, `updateFunction`, `deleteFunction`, `getFunction`, `searchFunctions` |
+| `gameserver/` | `getGameServers`, `getGameServer`, `getOnlinePlayers` |
+| `debug/` | `searchEvents`, `getSettings`, `searchPlayers` |
 
 ### Authentication
 
@@ -114,3 +121,34 @@ interface ToolContext {
 ## Error Handling
 
 Use `formatError()` from `src/utils/formatError.ts` when logging errors. It extracts readable info from Axios errors instead of dumping the full error object.
+
+## Testing the Agent API
+
+```bash
+# Health check
+curl http://localhost:3100/health
+
+# List conversations
+curl http://localhost:3100/api/conversations
+
+# Create conversation
+curl -X POST http://localhost:3100/api/conversations \
+  -H "Content-Type: application/json" \
+  -d '{"agentId": "module-writer", "provider": "openrouter"}'
+
+# Send message (SSE streaming response)
+curl -N -X POST http://localhost:3100/api/conversations/{id}/messages \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Create a hello world module"}'
+```
+
+SSE events: `text`, `tool_use`, `tool_result`, `done`, `error`
+
+## @takaro/apiclient Notes
+
+Quirks discovered during tool development:
+
+- `moduleControllerCreate` automatically creates a "latest" version - access via `response.data.data.latestVersion.id`
+- Module installation uses `module.moduleInstallationsControllerInstallModule({ versionId, gameServerId })` (not on gameserver controller)
+- `gameServerControllerGetPlayers` TypeScript types say single object but returns array at runtime - cast with `as unknown as Array<...>`
+- 409 Conflict returned when creating duplicate-named components (hooks, cronjobs, functions)
