@@ -59,17 +59,20 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
       return;
     }
 
-    const factory = agentRegistry.getFactory(agentId);
-    if (!factory) {
-      res.status(400).json({ error: `Unknown agent: ${agentId}` });
+    // Support compound IDs (module-writer/grok-fast) or separate agentId + agentVersion
+    // If agentVersion provided separately, append it to agentId for resolution
+    const fullAgentId = agentVersion ? `${agentId}/${agentVersion}` : agentId;
+
+    const resolved = agentRegistry.resolve(fullAgentId);
+    if (!resolved) {
+      const available = agentRegistry.listAgents().join(', ');
+      res.status(400).json({
+        error: `Unknown agent: ${fullAgentId}. Available: ${available}`,
+      });
       return;
     }
 
-    const version = agentVersion || factory.getDefaultVersion();
-    if (!factory.listVersions().includes(version)) {
-      res.status(400).json({ error: `Unknown version: ${version}` });
-      return;
-    }
+    const { factory, experimentOrVersion } = resolved;
 
     // Check user has OpenRouter configured
     const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, 'openrouter');
@@ -81,9 +84,10 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
       return;
     }
 
+    // Store base agent ID and experiment/version separately
     const conversation = await conversationService.create({
-      agentId,
-      agentVersion: version,
+      agentId: factory.agentId,
+      agentVersion: experimentOrVersion,
       userId: req.user!.id,
       provider: 'openrouter',
     });
@@ -96,13 +100,13 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
       });
 
       // Process with agent (non-streaming for initial message)
-      const agent = factory.createAgent(version);
+      const agent = factory.createAgent(experimentOrVersion);
       const messages = await conversationService.getMessages(conversation.id);
       const context = await buildContext(
         req,
         conversation.id,
-        agentId,
-        version,
+        factory.agentId,
+        experimentOrVersion,
         conversation.state || {}
       );
 

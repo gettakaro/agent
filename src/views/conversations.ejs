@@ -3,7 +3,7 @@
 <div class="page">
   <div class="page-header">
     <h1>Conversations</h1>
-    <a href="/new" class="btn btn-primary">New Conversation</a>
+    <a href="/new" class="btn btn-primary">New Chat</a>
   </div>
 
   <% if (conversations.length === 0) { %>
@@ -17,19 +17,19 @@
         <thead>
           <tr>
             <th>Agent</th>
-            <th>Version</th>
             <th>Title</th>
             <th>Created</th>
-            <th>Actions</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           <% conversations.forEach(conv => { %>
             <tr>
-              <td><span class="badge"><%= conv.agentId %></span></td>
-              <td><span class="badge badge-outline">v<%= conv.agentVersion %></span></td>
+              <td>
+                <span class="experiment-id"><%= conv.agentId %>/<%= conv.agentVersion %></span>
+              </td>
               <td><%= conv.title || 'Untitled' %></td>
-              <td><%= new Date(conv.createdAt).toLocaleString() %></td>
+              <td class="text-muted"><%= new Date(conv.createdAt).toLocaleString() %></td>
               <td>
                 <a href="/conversations/<%= conv.id %>" class="btn btn-small">View</a>
               </td>

@@ -68,6 +68,8 @@ export interface ToolDefinition {
   name: string;
   description: string;
   parameters: JSONSchema7;
+  /** Internal variant identifier for A/B testing. Not exposed to LLM. */
+  variant?: string;
   execute: (
     args: Record<string, unknown>,
     context: ToolContext

@@ -7,8 +7,8 @@
     <div class="form-group">
       <label for="agentId">Select Agent</label>
       <select name="agentId" id="agentId" class="form-control" required>
-        <% agents.forEach(agent => { %>
-          <option value="<%= agent.id %>"><%= agent.id %> (v<%= agent.defaultVersion %>)</option>
+        <% experiments.forEach(exp => { %>
+          <option value="<%= exp.id %>"><%= exp.id %> (<%= exp.model.split('/').pop() %>)</option>
         <% }) %>
       </select>
     </div>

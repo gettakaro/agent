@@ -5,8 +5,8 @@
     <div>
       <h1><%= conversation.title || 'Chat' %></h1>
       <div class="chat-meta">
-        <span class="badge"><%= conversation.agentId %></span>
-        <span class="badge badge-outline">v<%= conversation.agentVersion %></span>
+        <span class="experiment-id"><%= conversation.agentId %>/<%= conversation.agentVersion %></span>
+        <span class="text-muted">•</span>
         <span class="text-muted"><%= new Date(conversation.createdAt).toLocaleString() %></span>
       </div>
     </div>
@@ -14,51 +14,62 @@
   </div>
 
   <div class="chat-messages" id="messages">
-    <% if (messages.length === 0) { %>
+    <%
+      // Group consecutive assistant messages, preserving chronological order via parts array
+      const groupedMessages = [];
+      for (const msg of messages) {
+        const last = groupedMessages[groupedMessages.length - 1];
+
+        // Build parts for this message (tools first, then content)
+        const msgParts = [];
+        if (msg.toolExecutions?.length > 0) {
+          msgParts.push({ type: 'tools', tools: msg.toolExecutions });
+        }
+        if (msg.content) {
+          msgParts.push({ type: 'content', text: msg.content });
+        }
+
+        if (msg.role === 'assistant' && last?.role === 'assistant') {
+          // Append parts to existing group
+          last.parts.push(...msgParts);
+        } else {
+          groupedMessages.push({ role: msg.role, parts: msgParts });
+        }
+      }
+    %>
+    <% if (groupedMessages.length === 0) { %>
       <div class="empty-state">
         <p>No messages yet. Start the conversation below.</p>
       </div>
     <% } else { %>
-      <% messages.forEach(msg => { %>
+      <% groupedMessages.forEach(msg => { %>
         <div class="message message-<%= msg.role %>">
           <div class="message-header">
             <span class="message-role"><%= msg.role %></span>
           </div>
-          <div class="message-content"><%= msg.content %></div>
-          <% if (msg.toolExecutions && msg.toolExecutions.length > 0) { %>
-            <div class="tool-executions">
-              <% msg.toolExecutions.forEach((tool, idx) => { %>
-                <div class="tool-execution" data-tool-id="<%= tool.id %>">
-                  <div class="tool-execution-header" onclick="toggleToolExecution(this)">
-                    <span class="tool-name">
-                      <span class="icon">▶</span>
-                      <%= tool.name %>
-                    </span>
-                    <span class="tool-meta">
-                      <span class="tool-duration"><%= tool.durationMs %>ms</span>
-                      <span class="tool-status <%= tool.result.success ? 'success' : 'error' %>">
-                        <%= tool.result.success ? 'success' : 'error' %>
-                      </span>
-                    </span>
-                  </div>
-                  <div class="tool-execution-body">
-                    <div class="tool-section">
-                      <div class="tool-section-label">Input</div>
-                      <div class="tool-section-content">
-                        <pre><%= JSON.stringify(tool.input, null, 2) %></pre>
-                      </div>
+          <% msg.parts.forEach(part => { %>
+            <% if (part.type === 'tools') { %>
+              <div class="tool-executions">
+                <% part.tools.forEach(tool => {
+                  const summary = tool.input.name || tool.input.id || tool.input.moduleId || '';
+                %>
+                  <div class="tool-execution" data-tool-id="<%= tool.id %>">
+                    <div class="tool-pill" onclick="toggleToolExecution(this)">
+                      <span class="tool-pill-icon">▶</span>
+                      <span class="tool-pill-name"><%= tool.name %><% if (summary) { %>("<%= summary %>")<% } %></span>
+                      <span class="tool-pill-duration"><%= tool.durationMs %>ms</span>
+                      <span class="tool-pill-status <%= tool.result.success ? 'success' : 'error' %>"><%= tool.result.success ? '✓' : '✗' %></span>
                     </div>
-                    <div class="tool-section">
-                      <div class="tool-section-label">Output</div>
-                      <div class="tool-section-content">
-                        <pre><%= tool.result.error ? tool.result.error : JSON.stringify(tool.result.output, null, 2) %></pre>
-                      </div>
+                    <div class="tool-details">
+                      <pre class="tool-json"><%= JSON.stringify(tool.input) %> → <%= tool.result.error ? tool.result.error : JSON.stringify(tool.result.output) %></pre>
                     </div>
                   </div>
-                </div>
-              <% }) %>
-            </div>
-          <% } %>
+                <% }) %>
+              </div>
+            <% } else { %>
+              <div class="message-content"><%= part.text %></div>
+            <% } %>
+          <% }) %>
         </div>
       <% }) %>
     <% } %>
@@ -86,8 +97,14 @@
   // Track pending tool calls during streaming
   const pendingTools = new Map();
 
-  function toggleToolExecution(header) {
-    header.parentElement.classList.toggle('expanded');
+  function toggleToolExecution(pill) {
+    pill.parentElement.classList.toggle('expanded');
+    const icon = pill.querySelector('.tool-pill-icon');
+    if (icon) icon.textContent = pill.parentElement.classList.contains('expanded') ? '▼' : '▶';
+  }
+
+  function getToolSummary(input) {
+    return input.name || input.id || input.moduleId || '';
   }
 
   form.addEventListener('submit', async (e) => {
@@ -178,33 +195,19 @@
       msgEl.appendChild(container);
     }
 
+    const summary = getToolSummary(input);
     const toolEl = document.createElement('div');
     toolEl.className = 'tool-execution';
     toolEl.dataset.toolId = toolId;
     toolEl.innerHTML = `
-      <div class="tool-execution-header" onclick="toggleToolExecution(this)">
-        <span class="tool-name">
-          <span class="icon">▶</span>
-          ${escapeHtml(toolName)}
-        </span>
-        <span class="tool-meta">
-          <span class="tool-duration">running...</span>
-          <span class="tool-status" style="background: rgba(210, 153, 34, 0.2); color: var(--accent-warning);">pending</span>
-        </span>
+      <div class="tool-pill" onclick="toggleToolExecution(this)">
+        <span class="tool-pill-icon">▶</span>
+        <span class="tool-pill-name">${escapeHtml(toolName)}${summary ? '("' + escapeHtml(summary) + '")' : ''}</span>
+        <span class="tool-pill-duration">...</span>
+        <span class="tool-pill-status pending">⏳</span>
       </div>
-      <div class="tool-execution-body">
-        <div class="tool-section">
-          <div class="tool-section-label">Input</div>
-          <div class="tool-section-content">
-            <pre>${escapeHtml(JSON.stringify(input, null, 2))}</pre>
-          </div>
-        </div>
-        <div class="tool-section tool-output-section">
-          <div class="tool-section-label">Output</div>
-          <div class="tool-section-content">
-            <pre>Waiting for result...</pre>
-          </div>
-        </div>
+      <div class="tool-details">
+        <pre class="tool-json">${escapeHtml(JSON.stringify(input))} → waiting...</pre>
       </div>
     `;
     container.appendChild(toolEl);
@@ -222,29 +225,25 @@
     }
 
     // Update duration
-    const durationEl = toolEl.querySelector('.tool-duration');
+    const durationEl = toolEl.querySelector('.tool-pill-duration');
     if (durationEl) {
       durationEl.textContent = durationMs + 'ms';
     }
 
     // Update status
-    const statusEl = toolEl.querySelector('.tool-status');
+    const statusEl = toolEl.querySelector('.tool-pill-status');
     if (statusEl) {
-      if (result.success) {
-        statusEl.className = 'tool-status success';
-        statusEl.textContent = 'success';
-      } else {
-        statusEl.className = 'tool-status error';
-        statusEl.textContent = 'error';
-      }
+      statusEl.className = 'tool-pill-status ' + (result.success ? 'success' : 'error');
+      statusEl.textContent = result.success ? '✓' : '✗';
     }
 
-    // Update output
-    const outputSection = toolEl.querySelector('.tool-output-section .tool-section-content pre');
-    if (outputSection) {
-      outputSection.textContent = result.error
-        ? result.error
-        : JSON.stringify(result.output, null, 2);
+    // Update output in details
+    const pending = pendingTools.get(toolId);
+    const inputJson = pending ? JSON.stringify(pending.input) : '{}';
+    const outputJson = result.error ? result.error : JSON.stringify(result.output);
+    const jsonEl = toolEl.querySelector('.tool-json');
+    if (jsonEl) {
+      jsonEl.textContent = inputJson + ' → ' + outputJson;
     }
 
     pendingTools.delete(toolId);

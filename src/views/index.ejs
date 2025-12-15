@@ -3,45 +3,45 @@
 <div class="dashboard">
   <h1>Dashboard</h1>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-value"><%= agentCount %></div>
-      <div class="stat-label">Agents</div>
+  <div class="dashboard-grid">
+    <div class="dashboard-sidebar">
+      <div class="stat-card">
+        <div class="stat-value"><%= experimentCount %></div>
+        <div class="stat-label">Experiments</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><%= conversationCount %></div>
+        <div class="stat-label">Conversations</div>
+      </div>
+      <a href="/new" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">New Chat</a>
     </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= conversationCount %></div>
-      <div class="stat-label">Conversations</div>
+
+    <div class="dashboard-main">
+      <div class="section-header">
+        <h2>Recent Conversations</h2>
+        <a href="/conversations" class="btn btn-secondary btn-small">View All</a>
+      </div>
+
+      <% if (recentConversations.length === 0) { %>
+        <div class="empty-state">
+          <p>No conversations yet</p>
+          <a href="/new" class="btn btn-primary">Start a conversation</a>
+        </div>
+      <% } else { %>
+        <div class="conversation-list">
+          <% recentConversations.forEach(conv => { %>
+            <a href="/conversations/<%= conv.id %>" class="conversation-row">
+              <div class="conversation-info">
+                <span class="experiment-id"><%= conv.agentId %>/<%= conv.agentVersion %></span>
+                <span class="conversation-title"><%= conv.title || 'Untitled conversation' %></span>
+              </div>
+              <span class="conversation-date text-muted"><%= new Date(conv.createdAt).toLocaleDateString() %></span>
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
     </div>
   </div>
-
-  <section class="section">
-    <div class="section-header">
-      <h2>Recent Conversations</h2>
-      <a href="/conversations" class="btn btn-secondary">View All</a>
-    </div>
-
-    <% if (recentConversations.length === 0) { %>
-      <div class="empty-state">
-        <p>No conversations yet</p>
-        <a href="/new" class="btn btn-primary">Start a conversation</a>
-      </div>
-    <% } else { %>
-      <div class="card-list">
-        <% recentConversations.forEach(conv => { %>
-          <a href="/conversations/<%= conv.id %>" class="card">
-            <div class="card-header">
-              <span class="badge"><%= conv.agentId %></span>
-              <span class="badge badge-outline">v<%= conv.agentVersion %></span>
-            </div>
-            <div class="card-body">
-              <p class="card-title"><%= conv.title || 'Untitled conversation' %></p>
-              <p class="card-meta"><%= new Date(conv.createdAt).toLocaleString() %></p>
-            </div>
-          </a>
-        <% }) %>
-      </div>
-    <% } %>
-  </section>
 </div>
 
 <%- include('partials/footer') %>

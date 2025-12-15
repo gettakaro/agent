@@ -1,33 +1,30 @@
 <%- include('partials/header') %>
 
 <div class="page">
-  <h1>Available Agents</h1>
+  <div class="page-header">
+    <h1>Agents</h1>
+    <a href="/new" class="btn btn-primary">New Chat</a>
+  </div>
 
-  <% if (agents.length === 0) { %>
+  <% if (experiments.length === 0) { %>
     <div class="empty-state">
       <p>No agents registered</p>
     </div>
   <% } else { %>
-    <div class="card-list">
-      <% agents.forEach(agent => { %>
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title"><%= agent.id %></h3>
-          </div>
-          <div class="card-body">
-            <p><strong>Default Version:</strong> <%= agent.defaultVersion %></p>
-            <p><strong>Available Versions:</strong></p>
-            <div class="badge-list">
-              <% agent.versions.forEach(version => { %>
-                <span class="badge <%= version === agent.defaultVersion ? '' : 'badge-outline' %>">
-                  v<%= version %>
-                </span>
-              <% }) %>
+    <div class="experiment-list">
+      <% experiments.forEach(exp => { %>
+        <div class="experiment-row">
+          <div class="experiment-info">
+            <div class="experiment-name">
+              <span class="experiment-type"><%= exp.type %></span>
+              <span class="experiment-separator">/</span>
+              <span class="experiment-variant"><%= exp.experiment %></span>
+            </div>
+            <div class="experiment-model">
+              <span class="text-muted"><%= exp.model %></span>
             </div>
           </div>
-          <div class="card-footer">
-            <a href="/new?agent=<%= agent.id %>" class="btn btn-primary">Start Conversation</a>
-          </div>
+          <a href="/new?agent=<%= exp.id %>" class="btn btn-primary btn-small">Start Chat</a>
         </div>
       <% }) %>
     </div>

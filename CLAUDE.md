@@ -33,7 +33,12 @@ HTTP Request → Auth Middleware → Conversation Route → AgentRuntime → LLM
 
 ### Agent System (`src/agents/`)
 
-**Registry Pattern**: Agents are registered at startup via `AgentRegistry`. Each agent type has a factory that creates agent instances with versioned configurations.
+**Experiment Naming**: Agents use compound identifiers for A/B testing: `{type}/{experiment}`
+- `module-writer/grok-fast` - Grok model experiment
+- `module-writer/claude-verbose` - Claude with verbose prompts
+- Once proven, experiments promote to stable: `module-writer@1.0.0`
+
+**Registry Pattern**: Agents registered at startup via `AgentRegistry`. Each agent type has a factory that creates instances for different experiments.
 
 **AgentRuntime**: The conversation loop that:
 1. Sends messages to LLM provider
@@ -41,11 +46,16 @@ HTTP Request → Auth Middleware → Conversation Route → AgentRuntime → LLM
 3. Feeds tool results back to LLM
 4. Repeats until LLM stops using tools (max 10 iterations)
 
-**Adding a New Agent**:
+**Adding a New Agent Experiment**:
 1. Create directory under `src/agents/{agent-name}/`
-2. Create `versions.ts` with `AgentVersionConfig` entries (model, system prompt, tools)
+2. Create `versions.ts` with experiment configs (model, system prompt, tools)
 3. Create factory class implementing `IAgentFactory`
 4. Register in `src/main.ts`
+
+**Tool Variants**: Tools can have internal variants for testing different implementations:
+```typescript
+{ name: 'listModules', variant: 'filtered', ... }  // LLM sees 'listModules'
+```
 
 ### Module Writer Agent (`src/agents/module-writer/`)
 
@@ -93,6 +103,7 @@ interface ToolDefinition {
   name: string;
   description: string;
   parameters: JSONSchema7;
+  variant?: string;  // Internal variant for A/B testing (not exposed to LLM)
   execute: (args: Record<string, unknown>, context: ToolContext) => Promise<ToolResult>;
 }
 
@@ -122,10 +133,10 @@ curl http://localhost:3100/health
 # List conversations
 curl http://localhost:3100/api/conversations
 
-# Create conversation
+# Create conversation (compound ID includes experiment)
 curl -X POST http://localhost:3100/api/conversations \
   -H "Content-Type: application/json" \
-  -d '{"agentId": "module-writer", "provider": "openrouter"}'
+  -d '{"agentId": "module-writer/grok-fast"}'
 
 # Send message (SSE streaming response)
 curl -N -X POST http://localhost:3100/api/conversations/{id}/messages \
