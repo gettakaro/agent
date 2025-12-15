@@ -2,6 +2,7 @@ import { createApp } from './http/app.js';
 import { config } from './config.js';
 import { agentRegistry } from './agents/registry.js';
 import { ModuleWriterFactory } from './agents/module-writer/index.js';
+import { PlayerModeratorFactory } from './agents/player-moderator/index.js';
 import { getDb, closeDb } from './db/connection.js';
 import { initServiceClient } from './takaro/client.js';
 import { initRedis, closeRedis } from './redis/client.js';
@@ -14,6 +15,7 @@ async function main() {
 
   // Register agents
   agentRegistry.register(new ModuleWriterFactory());
+  agentRegistry.register(new PlayerModeratorFactory());
   console.log(`Registered agents: ${agentRegistry.listAgents().join(', ')}`);
 
   // Test database connection
