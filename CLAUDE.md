@@ -11,8 +11,8 @@ npm run build        # TypeScript compile + copy views/public to dist/
 npm run start        # Run compiled app
 npm run typecheck    # Type check without emitting
 
-# Database
-docker compose up -d           # Start PostgreSQL (port 5433)
+# Database & Redis
+docker compose up -d           # Start PostgreSQL (port 5433) and Redis (port 6379)
 npm run db:migrate             # Run migrations
 npm run db:rollback            # Rollback last migration
 ```
@@ -56,13 +56,20 @@ The current agent builds Takaro modules. It maintains module state in `context.s
 - `validateModule` - Check for errors
 - `exportModule` - Generate final module JSON
 
-### Authentication (`src/takaro/client.ts`, `src/http/middleware/auth.ts`)
+### Authentication
 
-Two modes:
+**User Identity** (`src/takaro/client.ts`, `src/http/middleware/auth.ts`):
 - **Service account** (dev): Set `TAKARO_USERNAME` + `TAKARO_PASSWORD`. Client logs in at startup and is reused.
 - **Cookie-based** (production): Forward user's Takaro session cookies. Each request creates a new client.
 
 The authenticated `Client` from `@takaro/apiclient` is attached to requests as `req.takaroClient` and passed to tools via `context.takaroClient`.
+
+**LLM Credentials (BYOK)** (`src/auth/`, `/settings` page):
+Users must provide their own LLM API credentials via the Settings page:
+- **OpenRouter**: Paste API key directly (stored in `user_api_keys` table)
+- **Claude OAuth**: Login with Claude account via OAuth PKCE flow (tokens in `user_claude_tokens` table, Redis for PKCE state)
+
+Each conversation stores which provider to use. If user has only one provider configured, it's auto-selected.
 
 ### Conversations (`src/conversations/`)
 
@@ -71,9 +78,13 @@ Conversations and messages are stored in PostgreSQL. Each conversation tracks:
 - Current state (JSON blob for agent-specific data)
 - User ID (from Takaro auth)
 
-### LLM Provider (`src/agents/providers/`)
+### LLM Providers (`src/agents/providers/`)
 
-Currently only `OpenRouterProvider` using the OpenAI SDK pointed at OpenRouter's API. Streaming is enabled - chunks are emitted via callback and forwarded as SSE events.
+Two providers, selected per-conversation based on user's configured credentials:
+- **OpenRouterProvider**: Uses OpenAI SDK pointed at OpenRouter's API. Requires user's OpenRouter API key.
+- **AnthropicProvider**: Direct Anthropic API calls using user's Claude OAuth access token.
+
+Both support streaming - chunks are emitted via callback and forwarded as SSE events. Provider selection happens in `AgentRuntime.getProvider()`.
 
 ## Key Types
 
@@ -89,8 +100,14 @@ interface ToolDefinition {
 // Context passed to every tool
 interface ToolContext {
   conversationId: string;
+  agentId: string;
+  agentVersion: string;
   state: Record<string, unknown>;  // Mutable - persisted after each message
-  takaroClient?: Client;            // Authenticated Takaro API client
+  userId?: string;
+  takaroClient?: Client;           // Authenticated Takaro API client
+  provider?: 'openrouter' | 'anthropic';
+  anthropicAccessToken?: string;   // For Claude OAuth users
+  openrouterApiKey?: string;       // For OpenRouter users
 }
 ```
 
