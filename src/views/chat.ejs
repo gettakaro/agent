@@ -332,6 +332,12 @@
 
     // Re-attach form listener
     document.getElementById('chatForm').addEventListener('submit', handleSubmit);
+    document.getElementById('messageInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('chatForm').requestSubmit();
+      }
+    });
 
     // Scroll to bottom
     const messagesContainer = document.getElementById('messages');
@@ -483,8 +489,15 @@
 
   // Initialize form listener if conversation is selected
   const chatForm = document.getElementById('chatForm');
-  if (chatForm) {
+  const messageInput = document.getElementById('messageInput');
+  if (chatForm && messageInput) {
     chatForm.addEventListener('submit', handleSubmit);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.requestSubmit();
+      }
+    });
   }
 
   // Scroll to bottom on load

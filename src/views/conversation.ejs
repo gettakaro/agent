@@ -166,6 +166,13 @@
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   });
 
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
   function addMessage(role, content) {
     // Remove empty state if present
     const emptyState = messagesContainer.querySelector('.empty-state');
