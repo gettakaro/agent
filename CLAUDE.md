@@ -72,11 +72,7 @@ The module-writer agent builds Takaro modules via direct API calls. It maintains
 The authenticated `Client` from `@takaro/apiclient` is attached to requests as `req.takaroClient` and passed to tools via `context.takaroClient`.
 
 **LLM Credentials (BYOK)** (`src/auth/`, `/settings` page):
-Users must provide their own LLM API credentials via the Settings page:
-- **OpenRouter**: Paste API key directly (stored in `user_api_keys` table)
-- **Claude OAuth**: Login with Claude account via OAuth PKCE flow (tokens in `user_claude_tokens` table, Redis for PKCE state)
-
-Each conversation stores which provider to use. If user has only one provider configured, it's auto-selected.
+Users must provide their own OpenRouter API key via the Settings page (stored in `user_api_keys` table).
 
 ### Conversations (`src/conversations/`)
 
@@ -85,13 +81,9 @@ Conversations and messages are stored in PostgreSQL. Each conversation tracks:
 - Current state (JSON blob for agent-specific data)
 - User ID (from Takaro auth)
 
-### LLM Providers (`src/agents/providers/`)
+### LLM Provider (`src/agents/providers/`)
 
-Two providers, selected per-conversation based on user's configured credentials:
-- **OpenRouterProvider**: Uses OpenAI SDK pointed at OpenRouter's API. Requires user's OpenRouter API key.
-- **AnthropicProvider**: Direct Anthropic API calls using user's Claude OAuth access token.
-
-Both support streaming - chunks are emitted via callback and forwarded as SSE events. Provider selection happens in `AgentRuntime.getProvider()`.
+**OpenRouterProvider**: Uses OpenAI SDK pointed at OpenRouter's API. Requires user's OpenRouter API key. Supports streaming - chunks are emitted via callback and forwarded as SSE events.
 
 ## Key Types
 
@@ -112,9 +104,8 @@ interface ToolContext {
   state: Record<string, unknown>;  // Mutable - persisted after each message
   userId?: string;
   takaroClient?: Client;           // Authenticated Takaro API client
-  provider?: 'openrouter' | 'anthropic';
-  anthropicAccessToken?: string;   // For Claude OAuth users
-  openrouterApiKey?: string;       // For OpenRouter users
+  provider?: 'openrouter';
+  openrouterApiKey?: string;
 }
 ```
 
