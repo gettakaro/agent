@@ -785,28 +785,7 @@ select.form-control {
   font-size: 0.8125rem;
 }
 
-/* Dashboard Grid */
-.dashboard h1 {
-  margin-bottom: 1.5rem;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 2rem;
-}
-
-.dashboard-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.dashboard-main {
-  min-width: 0;
-}
-
-/* Conversation List (Dashboard) */
+/* Conversation List */
 .conversation-list {
   display: flex;
   flex-direction: column;
@@ -843,27 +822,6 @@ select.form-control {
 .conversation-date {
   font-size: 0.8125rem;
   white-space: nowrap;
-}
-
-/* Responsive Dashboard */
-@media (max-width: 768px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .dashboard-sidebar .stat-card {
-    flex: 1;
-    min-width: 120px;
-  }
-
-  .dashboard-sidebar .btn {
-    flex: 1 1 100%;
-  }
 }
 
 /* Chat Layout - Sidebar + Main */

@@ -27,33 +27,8 @@ const apiKeyService = new ApiKeyService();
 // Apply auth middleware to all routes
 router.use(authMiddleware({ redirect: true }));
 
-// Home / Dashboard
+// Home - Conversations view
 router.get("/", async (req: AuthenticatedRequest, res: Response) => {
-  const conversations = await conversationService.listByUserId(req.user!.id);
-  const experiments = getExperimentInfo();
-
-  res.render("index", {
-    title: "Takaro Agent",
-    conversationCount: conversations.length,
-    experimentCount: experiments.length,
-    recentConversations: conversations.slice(0, 5),
-    user: req.user,
-  });
-});
-
-// Agents list
-router.get("/agents", async (req: AuthenticatedRequest, res: Response) => {
-  const experiments = getExperimentInfo();
-
-  res.render("agents", {
-    title: "Agents",
-    experiments,
-    user: req.user,
-  });
-});
-
-// Combined conversations + chat view
-router.get("/conversations", async (req: AuthenticatedRequest, res: Response) => {
   const conversations = await conversationService.listByUserId(req.user!.id);
   const experiments = getExperimentInfo();
   const selectedId = req.query.id as string | undefined;
@@ -80,9 +55,25 @@ router.get("/conversations", async (req: AuthenticatedRequest, res: Response) =>
   });
 });
 
-// Redirect old conversation URLs to new combined view
+// Agents list
+router.get("/agents", async (req: AuthenticatedRequest, res: Response) => {
+  const experiments = getExperimentInfo();
+
+  res.render("agents", {
+    title: "Agents",
+    experiments,
+    user: req.user,
+  });
+});
+
+// Redirect old conversation URLs to root
 router.get("/conversations/:id", async (req: AuthenticatedRequest, res: Response) => {
-  res.redirect(`/conversations?id=${req.params.id}`);
+  res.redirect(`/?id=${req.params.id}`);
+});
+
+// Redirect /conversations to root
+router.get("/conversations", async (_req: AuthenticatedRequest, res: Response) => {
+  res.redirect("/");
 });
 
 // New conversation form
