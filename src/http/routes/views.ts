@@ -3,6 +3,7 @@ import { parseAgentId } from "../../agents/experiments.js";
 import { agentRegistry } from "../../agents/registry.js";
 import { ApiKeyService } from "../../auth/api-key.service.js";
 import { ConversationService } from "../../conversations/service.js";
+import { getDocumentCount, getLastCommitSha, getLastSyncTime, knowledgeRegistry } from "../../knowledge/index.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 
 // Types for enhanced agent info
@@ -52,6 +53,35 @@ function detectKnowledgeBases(experiment: string): string[] {
     return ["takaro-docs"];
   }
   return [];
+}
+
+// Helper to find agents using a knowledge base
+function getAgentsUsingKnowledgeBase(kbId: string): string[] {
+  const agents: string[] = [];
+  for (const agentId of agentRegistry.listAgents()) {
+    const { experiment } = parseAgentId(agentId);
+    // Currently: "with-docs" experiment uses "takaro-docs"
+    if (kbId === "takaro-docs" && experiment === "with-docs") {
+      agents.push(agentId);
+    }
+  }
+  return agents;
+}
+
+// Types for knowledge base info
+interface KnowledgeBaseInfo {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  documentCount: number;
+  lastCommitSha: string | null;
+  lastSyncedAt: string | null;
+  refreshSchedule: string | null;
+  source: string | null;
+  extensions: string[];
+  chunkSize: number;
+  chunkOverlap: number;
 }
 
 // Helper to get enhanced experiment info for agents page
@@ -202,8 +232,53 @@ router.get("/settings", async (req: AuthenticatedRequest, res: Response) => {
 
 // Knowledge bases page
 router.get("/knowledge", async (req: AuthenticatedRequest, res: Response) => {
+  const kbIds = knowledgeRegistry.listKnowledgeBaseTypes();
+  const knowledgeBases: KnowledgeBaseInfo[] = (
+    await Promise.all(
+      kbIds.map(async (kbId) => {
+        const factory = knowledgeRegistry.getFactory(kbId);
+        if (!factory) return null;
+
+        const version = factory.getDefaultVersion();
+        const kb = factory.createKnowledgeBase(version);
+        const ingestionConfig = factory.getIngestionConfig?.();
+        const [documentCount, lastCommitSha, lastSyncedAt] = await Promise.all([
+          getDocumentCount(kbId, version),
+          getLastCommitSha(kbId),
+          getLastSyncTime(kbId),
+        ]);
+
+        return {
+          id: kbId,
+          name: kb.name,
+          description: kb.description,
+          version,
+          documentCount,
+          lastCommitSha: lastCommitSha || null,
+          lastSyncedAt: lastSyncedAt?.toISOString() || null,
+          refreshSchedule: ingestionConfig?.refreshSchedule || null,
+          source: ingestionConfig?.source || null,
+          extensions: ingestionConfig?.extensions || [],
+          chunkSize: ingestionConfig?.chunkSize || 1000,
+          chunkOverlap: ingestionConfig?.chunkOverlap || 200,
+        };
+      }),
+    )
+  ).filter((kb): kb is KnowledgeBaseInfo => kb !== null);
+
+  const selectedId = req.query.id as string | undefined;
+  const selectedKb = selectedId ? knowledgeBases.find((kb) => kb.id === selectedId) : null;
+
+  let agentUsage: string[] = [];
+  if (selectedKb) {
+    agentUsage = getAgentsUsingKnowledgeBase(selectedKb.id);
+  }
+
   res.render("knowledge", {
     title: "Knowledge Bases",
+    knowledgeBases,
+    selectedKb,
+    agentUsage,
     user: req.user,
   });
 });

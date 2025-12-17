@@ -1,4 +1,6 @@
 import { type Response, Router } from "express";
+import { parseAgentId } from "../../agents/experiments.js";
+import { agentRegistry } from "../../agents/registry.js";
 import {
   getDocumentCount,
   getLastCommitSha,
@@ -122,6 +124,34 @@ router.get("/:kbId/search", async (req: AuthenticatedRequest, res: Response) => 
   } catch (error) {
     console.error("Error searching knowledge base:", formatError(error));
     res.status(500).json({ error: "Failed to search knowledge base" });
+  }
+});
+
+// Get agents using this knowledge base
+router.get("/:kbId/agents", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { kbId } = req.params;
+    const factory = knowledgeRegistry.getFactory(kbId!);
+
+    if (!factory) {
+      res.status(404).json({ error: "Knowledge base not found" });
+      return;
+    }
+
+    // Find agents using this KB
+    const agents: string[] = [];
+    for (const agentId of agentRegistry.listAgents()) {
+      const { experiment } = parseAgentId(agentId);
+      // Currently: "with-docs" experiment uses "takaro-docs"
+      if (kbId === "takaro-docs" && experiment === "with-docs") {
+        agents.push(agentId);
+      }
+    }
+
+    res.json({ data: agents });
+  } catch (error) {
+    console.error("Error getting agents for knowledge base:", formatError(error));
+    res.status(500).json({ error: "Failed to get agents" });
   }
 });
 

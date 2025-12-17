@@ -1,382 +1,220 @@
 <%- include('partials/header') %>
 
-<div class="page">
-  <div class="page-header">
-    <h1>Knowledge Bases</h1>
-  </div>
-
-  <div id="flash-message" class="alert" style="display: none;"></div>
-
-  <div id="kb-list" class="card-grid">
-    <div class="loading">Loading knowledge bases...</div>
-  </div>
-
-  <!-- Search Modal -->
-  <div id="search-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="search-modal-title">Search Knowledge Base</h2>
-        <button class="btn-close" onclick="closeSearchModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <input type="text" id="search-query" class="form-control" placeholder="Enter search query..." />
-          <button class="btn btn-primary" onclick="executeSearch()">Search</button>
-        </div>
-        <div id="search-results" class="search-results"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <style>
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .kb-card {
-    background: var(--card-bg, #1a1a2e);
-    border: 1px solid var(--border-color, #2a2a4e);
-    border-radius: 8px;
-    padding: 1.5rem;
-  }
-
-  .kb-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-  }
-
-  .kb-card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  .kb-card-description {
-    color: var(--text-muted, #888);
-    font-size: 0.875rem;
-    margin: 0.5rem 0 1rem;
-  }
-
-  .kb-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-  }
-
-  .kb-stat {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .kb-stat-label {
-    color: var(--text-muted, #888);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-  }
-
-  .kb-stat-value {
-    font-weight: 500;
-  }
-
-  .kb-actions {
-    display: flex;
-    gap: 0.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color, #2a2a4e);
-  }
-
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-
-  .modal-content {
-    background: var(--card-bg, #1a1a2e);
-    border: 1px solid var(--border-color, #2a2a4e);
-    border-radius: 8px;
-    width: 90%;
-    max-width: 700px;
-    max-height: 80vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-color, #2a2a4e);
-  }
-
-  .modal-header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-  }
-
-  .btn-close {
-    background: none;
-    border: none;
-    color: var(--text-muted, #888);
-    font-size: 1.5rem;
-    cursor: pointer;
+  /* Override container for full-width layout */
+  main.container {
+    max-width: none;
     padding: 0;
-    line-height: 1;
-  }
-
-  .btn-close:hover {
-    color: var(--text-color, #fff);
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-  }
-
-  .modal-body .form-group {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .modal-body .form-control {
-    flex: 1;
-  }
-
-  .search-results {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .search-result {
-    background: var(--bg-secondary, #0f0f1a);
-    border: 1px solid var(--border-color, #2a2a4e);
-    border-radius: 6px;
-    padding: 1rem;
-  }
-
-  .search-result-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .search-result-score {
-    font-size: 0.75rem;
-    color: var(--text-muted, #888);
-    background: var(--bg-tertiary, #1a1a2e);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-  }
-
-  .search-result-source {
-    font-size: 0.75rem;
-    color: var(--text-muted, #888);
-  }
-
-  .search-result-content {
-    font-size: 0.875rem;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    max-height: 150px;
-    overflow-y: auto;
-  }
-
-  .loading, .empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-muted, #888);
-  }
-
-  .syncing {
-    animation: pulse 1.5s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+    margin: 0;
+    width: 100%;
   }
 </style>
 
-<script>
-  let knowledgeBases = [];
-  let currentSearchKbId = null;
+<div class="knowledge-layout">
+  <!-- Mobile sidebar toggle -->
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+    <span class="hamburger-icon">&#9776;</span>
+  </button>
 
-  function showFlash(message, type) {
-    const flash = document.getElementById('flash-message');
-    flash.textContent = message;
-    flash.className = 'alert alert-' + type;
-    flash.style.display = 'block';
-    setTimeout(() => { flash.style.display = 'none'; }, 5000);
-  }
+  <!-- Overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  function formatDate(dateStr) {
-    if (!dateStr) return 'Never';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  }
-
-  function formatNumber(num) {
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'k';
-    }
-    return num.toString();
-  }
-
-  function renderKnowledgeBases() {
-    const container = document.getElementById('kb-list');
-
-    if (knowledgeBases.length === 0) {
-      container.innerHTML = '<div class="empty-state">No knowledge bases configured.</div>';
-      return;
-    }
-
-    container.innerHTML = knowledgeBases.map(kb => `
-      <div class="kb-card" data-kb-id="${kb.id}">
-        <div class="kb-card-header">
-          <h3 class="kb-card-title">${kb.name}</h3>
-          <span class="badge badge-outline">${kb.version}</span>
+  <!-- Sidebar -->
+  <aside class="knowledge-sidebar" id="knowledgeSidebar">
+    <div class="sidebar-header">
+      <h2>Knowledge Bases</h2>
+    </div>
+    <div class="kb-sidebar-list" id="kbList">
+      <% if (knowledgeBases.length === 0) { %>
+        <div class="empty-state">
+          <p>No knowledge bases registered</p>
         </div>
-        ${kb.description ? `<p class="kb-card-description">${kb.description}</p>` : ''}
-        <div class="kb-stats">
-          <div class="kb-stat">
-            <span class="kb-stat-label">Documents</span>
-            <span class="kb-stat-value">${formatNumber(kb.documentCount)} chunks</span>
+      <% } else { %>
+        <% knowledgeBases.forEach(kb => { %>
+          <div
+            class="kb-sidebar-item<%= selectedKb && selectedKb.id === kb.id ? ' active' : '' %>"
+            data-id="<%= kb.id %>"
+            onclick="selectKnowledgeBase('<%= kb.id %>')"
+          >
+            <span class="kb-sidebar-item-name"><%= kb.name %></span>
+            <span class="kb-sidebar-item-count"><%= kb.documentCount %></span>
           </div>
-          <div class="kb-stat">
-            <span class="kb-stat-label">Last Sync</span>
-            <span class="kb-stat-value">${formatDate(kb.lastSyncedAt)}</span>
+        <% }) %>
+      <% } %>
+    </div>
+  </aside>
+
+  <!-- Main content area -->
+  <main class="knowledge-main" id="knowledgeMain">
+    <% if (!selectedKb) { %>
+      <div class="empty-state" id="emptyState">
+        <p>Select a knowledge base to view details</p>
+      </div>
+    <% } else { %>
+      <div class="kb-detail" id="kbDetail">
+        <div class="kb-detail-header">
+          <div class="kb-detail-title">
+            <span class="badge badge-outline"><%= selectedKb.version %></span>
+            <h1><%= selectedKb.name %></h1>
           </div>
-          <div class="kb-stat">
-            <span class="kb-stat-label">Source</span>
-            <span class="kb-stat-value">${kb.source ? 'GitHub' : 'Manual'}</span>
+          <% if (selectedKb.source) { %>
+            <button class="btn btn-primary" id="syncBtn" onclick="triggerSync('<%= selectedKb.id %>')">Sync Now</button>
+          <% } %>
+        </div>
+
+        <p class="kb-description"><%= selectedKb.description %></p>
+
+        <div class="kb-meta-grid">
+          <div class="kb-meta-item">
+            <span class="kb-meta-label">Documents</span>
+            <span class="kb-meta-value"><%= selectedKb.documentCount.toLocaleString() %> chunks</span>
           </div>
-          <div class="kb-stat">
-            <span class="kb-stat-label">Schedule</span>
-            <span class="kb-stat-value">${kb.refreshSchedule || 'None'}</span>
+          <div class="kb-meta-item">
+            <span class="kb-meta-label">Last Sync</span>
+            <span class="kb-meta-value" id="lastSync"><%= selectedKb.lastSyncedAt ? new Date(selectedKb.lastSyncedAt).toLocaleString() : 'Never' %></span>
+          </div>
+          <div class="kb-meta-item">
+            <span class="kb-meta-label">Schedule</span>
+            <span class="kb-meta-value"><%= selectedKb.refreshSchedule || 'Manual' %></span>
+          </div>
+          <div class="kb-meta-item">
+            <span class="kb-meta-label">Source</span>
+            <span class="kb-meta-value"><%= selectedKb.source ? 'GitHub' : 'Manual' %></span>
           </div>
         </div>
-        <div class="kb-actions">
-          <button class="btn btn-secondary" onclick="openSearchModal('${kb.id}', '${kb.name}')">Search</button>
-          ${kb.source ? `<button class="btn btn-secondary" onclick="triggerSync('${kb.id}')">Sync Now</button>` : ''}
+
+        <!-- Search Section -->
+        <div class="kb-section">
+          <div class="kb-section-header" onclick="toggleSection(this)">
+            <span class="kb-section-icon">&#9660;</span>
+            <h3>Search</h3>
+          </div>
+          <div class="kb-section-content">
+            <div class="search-inline">
+              <input type="text" id="searchQuery" class="form-control" placeholder="Search this knowledge base..." />
+              <button class="btn btn-primary" onclick="executeSearch()">Search</button>
+            </div>
+            <div id="searchResults" class="search-results-inline"></div>
+          </div>
+        </div>
+
+        <% if (selectedKb.source) { %>
+        <!-- Source Configuration -->
+        <div class="kb-section">
+          <div class="kb-section-header" onclick="toggleSection(this)">
+            <span class="kb-section-icon">&#9660;</span>
+            <h3>Source Configuration</h3>
+          </div>
+          <div class="kb-section-content">
+            <div class="source-config">
+              <div class="source-config-item">
+                <span class="source-config-label">GitHub URL</span>
+                <span class="source-config-value"><a href="<%= selectedKb.source %>" target="_blank"><%= selectedKb.source.replace('https://github.com/', '') %></a></span>
+              </div>
+              <div class="source-config-item">
+                <span class="source-config-label">Extensions</span>
+                <span class="source-config-value"><%= selectedKb.extensions.join(', ') || '.md, .txt' %></span>
+              </div>
+              <div class="source-config-item">
+                <span class="source-config-label">Chunk Size</span>
+                <span class="source-config-value"><%= selectedKb.chunkSize %> chars (<%= selectedKb.chunkOverlap %> overlap)</span>
+              </div>
+              <% if (selectedKb.lastCommitSha) { %>
+              <div class="source-config-item">
+                <span class="source-config-label">Last Commit</span>
+                <span class="source-config-value"><%= selectedKb.lastCommitSha.substring(0, 7) %></span>
+              </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Agent Usage -->
+        <div class="kb-section">
+          <div class="kb-section-header" onclick="toggleSection(this)">
+            <span class="kb-section-icon">&#9660;</span>
+            <h3>Agent Usage (<%= agentUsage.length %>)</h3>
+          </div>
+          <div class="kb-section-content">
+            <% if (agentUsage.length === 0) { %>
+              <p class="text-muted">No agents currently use this knowledge base</p>
+            <% } else { %>
+              <div class="agent-usage-list">
+                <% agentUsage.forEach(agentId => { %>
+                  <a href="/agents?id=<%= agentId %>" class="agent-usage-item">
+                    <span class="agent-usage-item-name"><%= agentId %></span>
+                  </a>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
         </div>
       </div>
-    `).join('');
+    <% } %>
+  </main>
+</div>
+
+<script>
+  // Store all KB data for client-side navigation
+  const kbData = <%- JSON.stringify(knowledgeBases) %>;
+  let currentKbId = '<%= selectedKb ? selectedKb.id : "" %>';
+
+  // Sidebar toggle for mobile
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebar = document.getElementById('knowledgeSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+
+  function toggleSidebar() {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
   }
 
-  async function loadKnowledgeBases() {
-    try {
-      const response = await fetch('/api/knowledge-bases');
-      if (!response.ok) throw new Error('Failed to load');
-      const result = await response.json();
-      knowledgeBases = result.data || [];
-      renderKnowledgeBases();
-    } catch (err) {
-      document.getElementById('kb-list').innerHTML =
-        '<div class="empty-state">Failed to load knowledge bases.</div>';
-      showFlash('Failed to load knowledge bases', 'error');
-    }
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', toggleSidebar);
+  }
+  if (overlay) {
+    overlay.addEventListener('click', toggleSidebar);
   }
 
-  function openSearchModal(kbId, kbName) {
-    currentSearchKbId = kbId;
-    document.getElementById('search-modal-title').textContent = `Search: ${kbName}`;
-    document.getElementById('search-query').value = '';
-    document.getElementById('search-results').innerHTML = '';
-    document.getElementById('search-modal').style.display = 'flex';
-    document.getElementById('search-query').focus();
+  function toggleSection(header) {
+    const section = header.closest('.kb-section');
+    section.classList.toggle('collapsed');
+    const icon = header.querySelector('.kb-section-icon');
+    icon.innerHTML = section.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
   }
 
-  function closeSearchModal() {
-    document.getElementById('search-modal').style.display = 'none';
-    currentSearchKbId = null;
-  }
+  async function selectKnowledgeBase(id) {
+    if (id === currentKbId) return;
 
-  async function executeSearch() {
-    const query = document.getElementById('search-query').value.trim();
-    if (!query || !currentSearchKbId) return;
+    // Close mobile sidebar
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
 
-    const resultsContainer = document.getElementById('search-results');
-    resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
+    // Update URL
+    history.pushState({}, '', '/knowledge?id=' + encodeURIComponent(id));
 
-    try {
-      const response = await fetch(`/api/knowledge-bases/${currentSearchKbId}/search?q=${encodeURIComponent(query)}&limit=10`);
-      if (!response.ok) throw new Error('Search failed');
-      const result = await response.json();
-      const results = result.data || [];
+    // Update active state in sidebar
+    document.querySelectorAll('.kb-sidebar-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.id === id);
+    });
 
-      if (results.length === 0) {
-        resultsContainer.innerHTML = '<div class="empty-state">No results found.</div>';
-        return;
+    // Find KB data
+    const kb = kbData.find(k => k.id === id);
+    if (kb) {
+      currentKbId = id;
+
+      // Fetch agent usage for this KB
+      let agents = [];
+      try {
+        const res = await fetch('/api/knowledge-bases/' + encodeURIComponent(id) + '/agents');
+        const data = await res.json();
+        agents = data.data || [];
+      } catch (e) {
+        console.error('Failed to fetch agent usage:', e);
       }
 
-      resultsContainer.innerHTML = results.map((r, i) => `
-        <div class="search-result">
-          <div class="search-result-header">
-            <span class="search-result-source">${r.metadata?.sourceFile || 'Unknown source'}</span>
-            <span class="search-result-score">Score: ${(r.score * 100).toFixed(1)}%</span>
-          </div>
-          <div class="search-result-content">${escapeHtml(r.content)}</div>
-        </div>
-      `).join('');
-    } catch (err) {
-      resultsContainer.innerHTML = '<div class="empty-state">Search failed.</div>';
-      showFlash('Search failed', 'error');
-    }
-  }
-
-  async function triggerSync(kbId) {
-    const card = document.querySelector(`[data-kb-id="${kbId}"]`);
-    const syncBtn = card?.querySelector('button:last-child');
-    if (syncBtn) {
-      syncBtn.disabled = true;
-      syncBtn.classList.add('syncing');
-      syncBtn.textContent = 'Syncing...';
-    }
-
-    try {
-      const response = await fetch(`/api/knowledge-bases/${kbId}/sync`, { method: 'POST' });
-      if (!response.ok) throw new Error('Sync failed');
-      const result = await response.json();
-      showFlash(`Sync job queued (ID: ${result.data.jobId})`, 'success');
-
-      // Reload after short delay to show updated status
-      setTimeout(loadKnowledgeBases, 2000);
-    } catch (err) {
-      showFlash('Failed to trigger sync', 'error');
-      if (syncBtn) {
-        syncBtn.disabled = false;
-        syncBtn.classList.remove('syncing');
-        syncBtn.textContent = 'Sync Now';
-      }
+      renderKbDetail(kb, agents);
     }
   }
 
@@ -386,18 +224,205 @@
     return div.innerHTML;
   }
 
+  function formatDate(dateStr) {
+    if (!dateStr) return 'Never';
+    return new Date(dateStr).toLocaleString();
+  }
+
+  function renderKbDetail(kb, agents = []) {
+    const main = document.getElementById('knowledgeMain');
+
+    const agentUsageHtml = agents.length > 0
+      ? agents.map(agentId => `
+          <a href="/agents?id=${encodeURIComponent(agentId)}" class="agent-usage-item">
+            <span class="agent-usage-item-name">${escapeHtml(agentId)}</span>
+          </a>
+        `).join('')
+      : '<p class="text-muted">No agents currently use this knowledge base</p>';
+
+    const sourceConfigHtml = kb.source ? `
+      <div class="kb-section">
+        <div class="kb-section-header" onclick="toggleSection(this)">
+          <span class="kb-section-icon">&#9660;</span>
+          <h3>Source Configuration</h3>
+        </div>
+        <div class="kb-section-content">
+          <div class="source-config">
+            <div class="source-config-item">
+              <span class="source-config-label">GitHub URL</span>
+              <span class="source-config-value"><a href="${escapeHtml(kb.source)}" target="_blank">${escapeHtml(kb.source.replace('https://github.com/', ''))}</a></span>
+            </div>
+            <div class="source-config-item">
+              <span class="source-config-label">Extensions</span>
+              <span class="source-config-value">${escapeHtml((kb.extensions || []).join(', ') || '.md, .txt')}</span>
+            </div>
+            <div class="source-config-item">
+              <span class="source-config-label">Chunk Size</span>
+              <span class="source-config-value">${kb.chunkSize} chars (${kb.chunkOverlap} overlap)</span>
+            </div>
+            ${kb.lastCommitSha ? `
+            <div class="source-config-item">
+              <span class="source-config-label">Last Commit</span>
+              <span class="source-config-value">${escapeHtml(kb.lastCommitSha.substring(0, 7))}</span>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    const syncBtnHtml = kb.source
+      ? `<button class="btn btn-primary" id="syncBtn" onclick="triggerSync('${escapeHtml(kb.id)}')">Sync Now</button>`
+      : '';
+
+    main.innerHTML = `
+      <div class="kb-detail" id="kbDetail">
+        <div class="kb-detail-header">
+          <div class="kb-detail-title">
+            <span class="badge badge-outline">${escapeHtml(kb.version)}</span>
+            <h1>${escapeHtml(kb.name)}</h1>
+          </div>
+          ${syncBtnHtml}
+        </div>
+
+        <p class="kb-description">${escapeHtml(kb.description)}</p>
+
+        <div class="kb-meta-grid">
+          <div class="kb-meta-item">
+            <span class="kb-meta-label">Documents</span>
+            <span class="kb-meta-value">${kb.documentCount.toLocaleString()} chunks</span>
+          </div>
+          <div class="kb-meta-item">
+            <span class="kb-meta-label">Last Sync</span>
+            <span class="kb-meta-value" id="lastSync">${formatDate(kb.lastSyncedAt)}</span>
+          </div>
+          <div class="kb-meta-item">
+            <span class="kb-meta-label">Schedule</span>
+            <span class="kb-meta-value">${escapeHtml(kb.refreshSchedule || 'Manual')}</span>
+          </div>
+          <div class="kb-meta-item">
+            <span class="kb-meta-label">Source</span>
+            <span class="kb-meta-value">${kb.source ? 'GitHub' : 'Manual'}</span>
+          </div>
+        </div>
+
+        <div class="kb-section">
+          <div class="kb-section-header" onclick="toggleSection(this)">
+            <span class="kb-section-icon">&#9660;</span>
+            <h3>Search</h3>
+          </div>
+          <div class="kb-section-content">
+            <div class="search-inline">
+              <input type="text" id="searchQuery" class="form-control" placeholder="Search this knowledge base..." />
+              <button class="btn btn-primary" onclick="executeSearch()">Search</button>
+            </div>
+            <div id="searchResults" class="search-results-inline"></div>
+          </div>
+        </div>
+
+        ${sourceConfigHtml}
+
+        <div class="kb-section">
+          <div class="kb-section-header" onclick="toggleSection(this)">
+            <span class="kb-section-icon">&#9660;</span>
+            <h3>Agent Usage (${agents.length})</h3>
+          </div>
+          <div class="kb-section-content">
+            <div class="agent-usage-list">${agentUsageHtml}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function executeSearch() {
+    const query = document.getElementById('searchQuery').value.trim();
+    if (!query || !currentKbId) return;
+
+    const resultsContainer = document.getElementById('searchResults');
+    resultsContainer.innerHTML = '<div class="text-muted">Searching...</div>';
+
+    try {
+      const response = await fetch(`/api/knowledge-bases/${encodeURIComponent(currentKbId)}/search?q=${encodeURIComponent(query)}&limit=10`);
+      if (!response.ok) throw new Error('Search failed');
+      const result = await response.json();
+      const results = result.data || [];
+
+      if (results.length === 0) {
+        resultsContainer.innerHTML = '<div class="text-muted">No results found.</div>';
+        return;
+      }
+
+      resultsContainer.innerHTML = results.map(r => `
+        <div class="search-result-inline">
+          <div class="search-result-header">
+            <span class="search-result-source">${escapeHtml(r.metadata?.sourceFile || 'Unknown source')}</span>
+            <span class="search-result-score">${(r.score * 100).toFixed(1)}%</span>
+          </div>
+          <div class="search-result-content">${escapeHtml(r.content)}</div>
+        </div>
+      `).join('');
+    } catch (err) {
+      resultsContainer.innerHTML = '<div class="text-muted">Search failed.</div>';
+      console.error('Search error:', err);
+    }
+  }
+
+  async function triggerSync(kbId) {
+    const syncBtn = document.getElementById('syncBtn');
+    if (syncBtn) {
+      syncBtn.disabled = true;
+      syncBtn.classList.add('syncing');
+      syncBtn.textContent = 'Syncing...';
+    }
+
+    try {
+      const response = await fetch(`/api/knowledge-bases/${encodeURIComponent(kbId)}/sync`, { method: 'POST' });
+      if (!response.ok) throw new Error('Sync failed');
+      const result = await response.json();
+      alert(`Sync job queued (ID: ${result.data.jobId})`);
+
+      // Reload page after short delay to show updated status
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (err) {
+      alert('Failed to trigger sync');
+      console.error('Sync error:', err);
+      if (syncBtn) {
+        syncBtn.disabled = false;
+        syncBtn.classList.remove('syncing');
+        syncBtn.textContent = 'Sync Now';
+      }
+    }
+  }
+
   // Handle Enter key in search input
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && document.activeElement?.id === 'search-query') {
+    if (e.key === 'Enter' && document.activeElement?.id === 'searchQuery') {
       executeSearch();
-    }
-    if (e.key === 'Escape' && document.getElementById('search-modal').style.display === 'flex') {
-      closeSearchModal();
     }
   });
 
-  // Initial load
-  loadKnowledgeBases();
+  // Handle browser back/forward
+  window.addEventListener('popstate', () => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (id && id !== currentKbId) {
+      selectKnowledgeBase(id);
+    } else if (!id && currentKbId) {
+      // Deselect
+      currentKbId = '';
+      document.querySelectorAll('.kb-sidebar-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.getElementById('knowledgeMain').innerHTML = `
+        <div class="empty-state" id="emptyState">
+          <p>Select a knowledge base to view details</p>
+        </div>
+      `;
+    }
+  });
 </script>
 
 <%- include('partials/footer') %>
