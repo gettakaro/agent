@@ -1,7 +1,14 @@
-import { Router, Response } from 'express';
-import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.js';
-import { knowledgeRegistry, vectorSearch, getDocumentCount, getLastCommitSha, getLastSyncTime, getSyncQueue } from '../../knowledge/index.js';
-import { formatError } from '../../utils/formatError.js';
+import { type Response, Router } from "express";
+import {
+  getDocumentCount,
+  getLastCommitSha,
+  getLastSyncTime,
+  getSyncQueue,
+  knowledgeRegistry,
+  vectorSearch,
+} from "../../knowledge/index.js";
+import { formatError } from "../../utils/formatError.js";
+import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -9,7 +16,7 @@ const router = Router();
 router.use(authMiddleware({ redirect: false }));
 
 // List all knowledge bases with stats
-router.get('/', async (_req: AuthenticatedRequest, res: Response) => {
+router.get("/", async (_req: AuthenticatedRequest, res: Response) => {
   try {
     // Use listKnowledgeBaseTypes() for base IDs - these are used in URL paths
     const kbIds = knowledgeRegistry.listKnowledgeBaseTypes();
@@ -40,24 +47,24 @@ router.get('/', async (_req: AuthenticatedRequest, res: Response) => {
           refreshSchedule: ingestionConfig?.refreshSchedule || null,
           source: ingestionConfig?.source || null,
         };
-      })
+      }),
     );
 
     res.json({ data: knowledgeBases.filter(Boolean) });
   } catch (error) {
-    console.error('Error listing knowledge bases:', formatError(error));
-    res.status(500).json({ error: 'Failed to list knowledge bases' });
+    console.error("Error listing knowledge bases:", formatError(error));
+    res.status(500).json({ error: "Failed to list knowledge bases" });
   }
 });
 
 // Get single knowledge base details
-router.get('/:kbId', async (req: AuthenticatedRequest, res: Response) => {
+router.get("/:kbId", async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { kbId } = req.params;
     const factory = knowledgeRegistry.getFactory(kbId!);
 
     if (!factory) {
-      res.status(404).json({ error: 'Knowledge base not found' });
+      res.status(404).json({ error: "Knowledge base not found" });
       return;
     }
 
@@ -85,25 +92,25 @@ router.get('/:kbId', async (req: AuthenticatedRequest, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Error getting knowledge base:', formatError(error));
-    res.status(500).json({ error: 'Failed to get knowledge base' });
+    console.error("Error getting knowledge base:", formatError(error));
+    res.status(500).json({ error: "Failed to get knowledge base" });
   }
 });
 
 // Search knowledge base
-router.get('/:kbId/search', async (req: AuthenticatedRequest, res: Response) => {
+router.get("/:kbId/search", async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { kbId } = req.params;
     const { q, limit } = req.query;
 
-    if (!q || typeof q !== 'string') {
+    if (!q || typeof q !== "string") {
       res.status(400).json({ error: 'Query parameter "q" is required' });
       return;
     }
 
     const factory = knowledgeRegistry.getFactory(kbId!);
     if (!factory) {
-      res.status(404).json({ error: 'Knowledge base not found' });
+      res.status(404).json({ error: "Knowledge base not found" });
       return;
     }
 
@@ -113,30 +120,30 @@ router.get('/:kbId/search', async (req: AuthenticatedRequest, res: Response) => 
 
     res.json({ data: results });
   } catch (error) {
-    console.error('Error searching knowledge base:', formatError(error));
-    res.status(500).json({ error: 'Failed to search knowledge base' });
+    console.error("Error searching knowledge base:", formatError(error));
+    res.status(500).json({ error: "Failed to search knowledge base" });
   }
 });
 
 // Trigger manual sync
-router.post('/:kbId/sync', async (req: AuthenticatedRequest, res: Response) => {
+router.post("/:kbId/sync", async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { kbId } = req.params;
     const factory = knowledgeRegistry.getFactory(kbId!);
 
     if (!factory) {
-      res.status(404).json({ error: 'Knowledge base not found' });
+      res.status(404).json({ error: "Knowledge base not found" });
       return;
     }
 
     const ingestionConfig = factory.getIngestionConfig?.();
     if (!ingestionConfig) {
-      res.status(400).json({ error: 'Knowledge base does not support automatic ingestion' });
+      res.status(400).json({ error: "Knowledge base does not support automatic ingestion" });
       return;
     }
 
     const queue = getSyncQueue();
-    const job = await queue.add('sync', {
+    const job = await queue.add("sync", {
       knowledgeBaseId: kbId!,
       version: factory.getDefaultVersion(),
       source: ingestionConfig.source,
@@ -148,12 +155,12 @@ router.post('/:kbId/sync', async (req: AuthenticatedRequest, res: Response) => {
     res.json({
       data: {
         jobId: job.id,
-        status: 'queued',
+        status: "queued",
       },
     });
   } catch (error) {
-    console.error('Error triggering sync:', formatError(error));
-    res.status(500).json({ error: 'Failed to trigger sync' });
+    console.error("Error triggering sync:", formatError(error));
+    res.status(500).json({ error: "Failed to trigger sync" });
   }
 });
 

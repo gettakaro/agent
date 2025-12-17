@@ -1,30 +1,31 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const updateModule: ToolDefinition = {
-  name: 'updateModule',
-  description: 'Update module metadata (name, description). Does not update components - use specific update tools for commands/hooks/etc.',
+  name: "updateModule",
+  description:
+    "Update module metadata (name, description). Does not update components - use specific update tools for commands/hooks/etc.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       moduleId: {
-        type: 'string',
-        description: 'The module ID to update',
+        type: "string",
+        description: "The module ID to update",
       },
       name: {
-        type: 'string',
-        description: 'New name for the module',
+        type: "string",
+        description: "New name for the module",
       },
       description: {
-        type: 'string',
-        description: 'New description for the module',
+        type: "string",
+        description: "New description for the module",
       },
     },
-    required: ['moduleId'],
+    required: ["moduleId"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const moduleId = args.moduleId as string;

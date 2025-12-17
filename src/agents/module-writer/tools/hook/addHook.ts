@@ -1,58 +1,58 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const addHook: ToolDefinition = {
-  name: 'addHook',
+  name: "addHook",
   description:
-    'Add an event hook to the current module version. Hooks trigger code when specific events occur (player connect, chat message, etc.). Requires createModule to be called first.',
+    "Add an event hook to the current module version. Hooks trigger code when specific events occur (player connect, chat message, etc.). Requires createModule to be called first.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       name: {
-        type: 'string',
-        description: 'Internal hook name (used as identifier)',
+        type: "string",
+        description: "Internal hook name (used as identifier)",
       },
       eventType: {
-        type: 'string',
-        description: 'Event that triggers the hook',
+        type: "string",
+        description: "Event that triggers the hook",
         enum: [
-          'log',
-          'player-connected',
-          'player-disconnected',
-          'chat-message',
-          'player-death',
-          'entity-killed',
-          'discord-message',
-          'role-assigned',
-          'role-removed',
-          'command-executed',
-          'hook-executed',
-          'cronjob-executed',
-          'currency-added',
-          'currency-deducted',
-          'player-new-ip-detected',
-          'server-status-changed',
+          "log",
+          "player-connected",
+          "player-disconnected",
+          "chat-message",
+          "player-death",
+          "entity-killed",
+          "discord-message",
+          "role-assigned",
+          "role-removed",
+          "command-executed",
+          "hook-executed",
+          "cronjob-executed",
+          "currency-added",
+          "currency-deducted",
+          "player-new-ip-detected",
+          "server-status-changed",
         ],
       },
       regex: {
-        type: 'string',
+        type: "string",
         description: 'Regex pattern to filter events (use ".*" to match all)',
       },
       function: {
-        type: 'string',
+        type: "string",
         description:
-          'JavaScript code that executes when the event occurs. Has access to takaro, data (with eventData), and TakaroUserError from @takaro/helpers.',
+          "JavaScript code that executes when the event occurs. Has access to takaro, data (with eventData), and TakaroUserError from @takaro/helpers.",
       },
       description: {
-        type: 'string',
-        description: 'Description of what this hook does',
+        type: "string",
+        description: "Description of what this hook does",
       },
     },
-    required: ['name', 'eventType', 'regex', 'function'],
+    required: ["name", "eventType", "regex", "function"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const versionId = context.state.versionId as string | undefined;
@@ -60,7 +60,7 @@ export const addHook: ToolDefinition = {
       return {
         success: false,
         output: null,
-        error: 'No module version found. Call createModule first.',
+        error: "No module version found. Call createModule first.",
       };
     }
 

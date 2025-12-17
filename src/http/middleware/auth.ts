@@ -1,12 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { Client } from '@takaro/apiclient';
-import { config } from '../../config.js';
-import {
-  getServiceClient,
-  isServiceMode,
-  createUserClient,
-} from '../../takaro/client.js';
-import { formatError } from '../../utils/formatError.js';
+import type { Client } from "@takaro/apiclient";
+import type { NextFunction, Request, Response } from "express";
+import { config } from "../../config.js";
+import { createUserClient, getServiceClient, isServiceMode } from "../../takaro/client.js";
+import { formatError } from "../../utils/formatError.js";
 
 export interface TakaroUser {
   id: string;
@@ -20,17 +16,13 @@ export interface AuthenticatedRequest extends Request {
 }
 
 function isApiRoute(req: Request): boolean {
-  return req.path.startsWith('/api/');
+  return req.path.startsWith("/api/");
 }
 
 export function authMiddleware(options: { redirect?: boolean } = {}) {
   const shouldRedirect = options.redirect ?? true;
 
-  return async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ) => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Service account mode (dev/testing with username/password)
     if (isServiceMode()) {
       const client = getServiceClient()!;
@@ -45,8 +37,8 @@ export function authMiddleware(options: { redirect?: boolean } = {}) {
         req.takaroClient = client;
         return next();
       } catch (error) {
-        console.error('Service account auth failed:', formatError(error));
-        return res.status(500).json({ error: 'Service account auth failed' });
+        console.error("Service account auth failed:", formatError(error));
+        return res.status(500).json({ error: "Service account auth failed" });
       }
     }
 
@@ -57,7 +49,7 @@ export function authMiddleware(options: { redirect?: boolean } = {}) {
       if (shouldRedirect && !isApiRoute(req)) {
         return res.redirect(config.takaroLoginUrl);
       }
-      return res.status(401).json({ error: 'Not authenticated' });
+      return res.status(401).json({ error: "Not authenticated" });
     }
 
     try {
@@ -72,11 +64,11 @@ export function authMiddleware(options: { redirect?: boolean } = {}) {
       req.takaroClient = client;
       next();
     } catch (error) {
-      console.error('Cookie auth failed:', formatError(error));
+      console.error("Cookie auth failed:", formatError(error));
       if (shouldRedirect && !isApiRoute(req)) {
         return res.redirect(config.takaroLoginUrl);
       }
-      return res.status(401).json({ error: 'Not authenticated' });
+      return res.status(401).json({ error: "Not authenticated" });
     }
   };
 }

@@ -1,4 +1,4 @@
-import type { ToolDefinition, StreamChunk, Message } from '../types.js';
+import type { Message, StreamChunk, ToolDefinition } from "../types.js";
 
 export interface ChatOptions {
   model: string;
@@ -12,7 +12,7 @@ export interface ILLMProvider {
     systemPrompt: string,
     tools: ToolDefinition[],
     options: ChatOptions,
-    onChunk?: (chunk: StreamChunk) => void
+    onChunk?: (chunk: StreamChunk) => void,
   ): Promise<ProviderResponse>;
 }
 
@@ -27,5 +27,5 @@ export interface ProviderResponse {
     inputTokens: number;
     outputTokens: number;
   };
-  stopReason: 'end_turn' | 'tool_use' | 'max_tokens';
+  stopReason: "end_turn" | "tool_use" | "max_tokens";
 }

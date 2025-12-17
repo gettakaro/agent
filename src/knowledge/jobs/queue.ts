@@ -1,7 +1,7 @@
-import { Queue } from 'bullmq';
-import { getRedisConnection } from './connection.js';
+import { Queue } from "bullmq";
+import { getRedisConnection } from "./connection.js";
 
-export const KB_SYNC_QUEUE = 'kb-sync';
+export const KB_SYNC_QUEUE = "kb-sync";
 
 export interface KBSyncJobData {
   knowledgeBaseId: string;
@@ -13,7 +13,7 @@ export interface KBSyncJobData {
 }
 
 export interface KBSyncResult {
-  type: 'full' | 'incremental' | 'skipped';
+  type: "full" | "incremental" | "skipped";
   sha: string;
   added?: number;
   modified?: number;

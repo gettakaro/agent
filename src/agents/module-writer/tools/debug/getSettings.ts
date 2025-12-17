@@ -1,19 +1,19 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const getSettings: ToolDefinition = {
-  name: 'getSettings',
+  name: "getSettings",
   description:
     'Get Takaro settings. Important for getting the commandPrefix which is needed to test commands (e.g., "/" or "+").',
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       gameServerId: {
-        type: 'string',
-        description: 'Game server ID to get settings for (optional, returns global settings if not provided)',
+        type: "string",
+        description: "Game server ID to get settings for (optional, returns global settings if not provided)",
       },
       keys: {
-        type: 'array',
-        items: { type: 'string' },
+        type: "array",
+        items: { type: "string" },
         description: 'Specific setting keys to retrieve. Common: "commandPrefix", "serverChatName"',
       },
     },
@@ -21,7 +21,7 @@ export const getSettings: ToolDefinition = {
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const gameServerId = args.gameServerId as string | undefined;

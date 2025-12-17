@@ -1,14 +1,15 @@
-import OpenAI from 'openai';
-import type { ToolDefinition, StreamChunk, Message } from '../types.js';
-import type { ILLMProvider, ChatOptions, ProviderResponse } from './types.js';
-import { formatError } from '../../utils/formatError.js';
+import OpenAI from "openai";
+import type { Stream } from "openai/streaming";
+import { formatError } from "../../utils/formatError.js";
+import type { Message, StreamChunk, ToolDefinition } from "../types.js";
+import type { ChatOptions, ILLMProvider, ProviderResponse } from "./types.js";
 
 export class OpenRouterProvider implements ILLMProvider {
   private client: OpenAI;
 
   constructor(apiKey: string) {
     this.client = new OpenAI({
-      baseURL: 'https://openrouter.ai/api/v1',
+      baseURL: "https://openrouter.ai/api/v1",
       apiKey,
     });
   }
@@ -18,18 +19,18 @@ export class OpenRouterProvider implements ILLMProvider {
     systemPrompt: string,
     tools: ToolDefinition[],
     options: ChatOptions,
-    onChunk?: (chunk: StreamChunk) => void
+    onChunk?: (chunk: StreamChunk) => void,
   ): Promise<ProviderResponse> {
     const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: 'system', content: systemPrompt },
+      { role: "system", content: systemPrompt },
       ...messages.map((m) => ({
-        role: m.role as 'user' | 'assistant',
+        role: m.role as "user" | "assistant",
         content: m.content,
       })),
     ];
 
     const openaiTools: OpenAI.ChatCompletionTool[] = tools.map((t) => ({
-      type: 'function' as const,
+      type: "function" as const,
       function: {
         name: t.name,
         description: t.description,
@@ -37,7 +38,7 @@ export class OpenRouterProvider implements ILLMProvider {
       },
     }));
 
-    let stream;
+    let stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>;
     try {
       stream = await this.client.chat.completions.create({
         model: options.model,
@@ -48,11 +49,11 @@ export class OpenRouterProvider implements ILLMProvider {
         stream: true,
       });
     } catch (err) {
-      console.error('OpenRouter API error:', formatError(err));
+      console.error("OpenRouter API error:", formatError(err));
       throw err;
     }
 
-    let textContent = '';
+    let textContent = "";
     const toolCalls: Array<{
       id: string;
       name: string;
@@ -60,10 +61,7 @@ export class OpenRouterProvider implements ILLMProvider {
     }> = [];
 
     // Track tool calls being built up from deltas
-    const toolCallBuilders = new Map<
-      number,
-      { id: string; name: string; arguments: string }
-    >();
+    const toolCallBuilders = new Map<number, { id: string; name: string; arguments: string }>();
 
     let finishReason: string | null = null;
     let promptTokens = 0;
@@ -83,7 +81,7 @@ export class OpenRouterProvider implements ILLMProvider {
       if (delta?.content) {
         textContent += delta.content;
         if (onChunk) {
-          onChunk({ type: 'text', content: delta.content });
+          onChunk({ type: "text", content: delta.content });
         }
       }
 
@@ -94,9 +92,9 @@ export class OpenRouterProvider implements ILLMProvider {
 
           if (!toolCallBuilders.has(index)) {
             toolCallBuilders.set(index, {
-              id: toolCallDelta.id || '',
-              name: toolCallDelta.function?.name || '',
-              arguments: '',
+              id: toolCallDelta.id || "",
+              name: toolCallDelta.function?.name || "",
+              arguments: "",
             });
           }
 
@@ -117,10 +115,7 @@ export class OpenRouterProvider implements ILLMProvider {
 
     // Finalize tool calls
     for (const builder of toolCallBuilders.values()) {
-      const input = JSON.parse(builder.arguments || '{}') as Record<
-        string,
-        unknown
-      >;
+      const input = JSON.parse(builder.arguments || "{}") as Record<string, unknown>;
       toolCalls.push({
         id: builder.id,
         name: builder.name,
@@ -129,7 +124,7 @@ export class OpenRouterProvider implements ILLMProvider {
 
       if (onChunk) {
         onChunk({
-          type: 'tool_use',
+          type: "tool_use",
           id: builder.id,
           name: builder.name,
           input,
@@ -144,12 +139,7 @@ export class OpenRouterProvider implements ILLMProvider {
         inputTokens: promptTokens,
         outputTokens: completionTokens,
       },
-      stopReason:
-        finishReason === 'tool_calls'
-          ? 'tool_use'
-          : finishReason === 'length'
-            ? 'max_tokens'
-            : 'end_turn',
+      stopReason: finishReason === "tool_calls" ? "tool_use" : finishReason === "length" ? "max_tokens" : "end_turn",
     };
   }
 }

@@ -1,37 +1,37 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const searchCommands: ToolDefinition = {
-  name: 'searchCommands',
-  description: 'Search for commands. Can filter by moduleId, versionId, name, or trigger.',
+  name: "searchCommands",
+  description: "Search for commands. Can filter by moduleId, versionId, name, or trigger.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       moduleId: {
-        type: 'string',
-        description: 'Filter by module ID',
+        type: "string",
+        description: "Filter by module ID",
       },
       versionId: {
-        type: 'string',
-        description: 'Filter by version ID',
+        type: "string",
+        description: "Filter by version ID",
       },
       name: {
-        type: 'string',
-        description: 'Filter by command name',
+        type: "string",
+        description: "Filter by command name",
       },
       trigger: {
-        type: 'string',
-        description: 'Filter by trigger',
+        type: "string",
+        description: "Filter by trigger",
       },
       limit: {
-        type: 'number',
-        description: 'Maximum number of results (default: 100)',
+        type: "number",
+        description: "Maximum number of results (default: 100)",
       },
     },
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const searchParams: Record<string, unknown> = {};

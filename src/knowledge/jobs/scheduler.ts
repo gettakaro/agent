@@ -1,6 +1,6 @@
-import { knowledgeRegistry } from '../registry.js';
-import { getSyncQueue } from './queue.js';
-import { getLastCommitSha } from './syncState.js';
+import { knowledgeRegistry } from "../registry.js";
+import { getSyncQueue } from "./queue.js";
+import { getLastCommitSha } from "./syncState.js";
 
 /**
  * Schedule sync jobs for all knowledge bases with refresh schedules.
@@ -25,7 +25,7 @@ export async function scheduleKBSyncJobs(): Promise<void> {
 
     // Register repeated job with cron schedule
     await queue.add(
-      'sync',
+      "sync",
       {
         knowledgeBaseId: kbId,
         version,
@@ -41,14 +41,14 @@ export async function scheduleKBSyncJobs(): Promise<void> {
         },
         removeOnComplete: { count: 100 },
         removeOnFail: { count: 50 },
-      }
+      },
     );
 
     // Check if this KB has never been synced - queue immediate sync
     const lastSha = await getLastCommitSha(kbId);
     if (!lastSha) {
       await queue.add(
-        'immediate-sync',
+        "immediate-sync",
         {
           knowledgeBaseId: kbId,
           version,
@@ -60,7 +60,7 @@ export async function scheduleKBSyncJobs(): Promise<void> {
         {
           removeOnComplete: true,
           removeOnFail: { count: 5 },
-        }
+        },
       );
     }
   }

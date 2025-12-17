@@ -1,22 +1,22 @@
-import { createApp } from './http/app.js';
-import { config } from './config.js';
-import { agentRegistry } from './agents/registry.js';
-import { ModuleWriterFactory } from './agents/module-writer/index.js';
-import { PlayerModeratorFactory } from './agents/player-moderator/index.js';
-import { getDb, closeDb } from './db/connection.js';
-import { initServiceClient } from './takaro/client.js';
-import { initRedis, closeRedis } from './redis/client.js';
+import { ModuleWriterFactory } from "./agents/module-writer/index.js";
+import { PlayerModeratorFactory } from "./agents/player-moderator/index.js";
+import { agentRegistry } from "./agents/registry.js";
+import { config } from "./config.js";
+import { closeDb, getDb } from "./db/connection.js";
+import { createApp } from "./http/app.js";
 import {
-  knowledgeRegistry,
-  startSyncWorker,
-  scheduleKBSyncJobs,
   closeRedisConnection as closeKBRedis,
   closeSyncQueue,
-} from './knowledge/index.js';
-import { TakaroDocsFactory } from './knowledge/takaro-docs/index.js';
+  knowledgeRegistry,
+  scheduleKBSyncJobs,
+  startSyncWorker,
+} from "./knowledge/index.js";
+import { TakaroDocsFactory } from "./knowledge/takaro-docs/index.js";
+import { closeRedis, initRedis } from "./redis/client.js";
+import { initServiceClient } from "./takaro/client.js";
 
 async function main() {
-  console.log('Starting Takaro Agent service...');
+  console.log("Starting Takaro Agent service...");
 
   // Initialize Takaro client (service account mode if credentials provided)
   await initServiceClient();
@@ -24,21 +24,19 @@ async function main() {
   // Register agents
   agentRegistry.register(new ModuleWriterFactory());
   agentRegistry.register(new PlayerModeratorFactory());
-  console.log(`Registered agents: ${agentRegistry.listAgents().join(', ')}`);
+  console.log(`Registered agents: ${agentRegistry.listAgents().join(", ")}`);
 
   // Register knowledge bases
   knowledgeRegistry.register(new TakaroDocsFactory());
-  console.log(
-    `Registered knowledge bases: ${knowledgeRegistry.listKnowledgeBases().join(', ')}`
-  );
+  console.log(`Registered knowledge bases: ${knowledgeRegistry.listKnowledgeBases().join(", ")}`);
 
   // Test database connection
   try {
     const db = getDb();
-    await db.raw('SELECT 1');
-    console.log('Database connection established');
+    await db.raw("SELECT 1");
+    console.log("Database connection established");
   } catch (err) {
-    console.error('Failed to connect to database:', err);
+    console.error("Failed to connect to database:", err);
     process.exit(1);
   }
 
@@ -46,13 +44,13 @@ async function main() {
   try {
     await initRedis();
   } catch (err) {
-    console.error('Failed to connect to Redis:', err);
+    console.error("Failed to connect to Redis:", err);
     process.exit(1);
   }
 
   // Start KB sync worker and schedule sync jobs
   const kbWorker = startSyncWorker();
-  console.log('KB sync worker started');
+  console.log("KB sync worker started");
 
   await scheduleKBSyncJobs();
 
@@ -61,25 +59,25 @@ async function main() {
 
   const server = app.listen(config.port, () => {
     console.log(`Server running on http://localhost:${config.port}`);
-    console.log('Available endpoints:');
-    console.log('  GET  /health');
-    console.log('  GET  /conversations');
-    console.log('  POST /conversations');
-    console.log('  GET  /conversations/:id');
-    console.log('  DELETE /conversations/:id');
-    console.log('  GET  /conversations/:id/messages');
-    console.log('  POST /conversations/:id/messages (SSE)');
-    console.log('  POST /auth/openrouter (Save API key)');
-    console.log('  DELETE /auth/openrouter (Remove API key)');
-    console.log('  GET  /auth/claude (OAuth initiate)');
-    console.log('  GET  /auth/claude/callback (OAuth callback)');
-    console.log('  DELETE /auth/claude (Disconnect)');
-    console.log('  GET  /auth/status (All providers)');
+    console.log("Available endpoints:");
+    console.log("  GET  /health");
+    console.log("  GET  /conversations");
+    console.log("  POST /conversations");
+    console.log("  GET  /conversations/:id");
+    console.log("  DELETE /conversations/:id");
+    console.log("  GET  /conversations/:id/messages");
+    console.log("  POST /conversations/:id/messages (SSE)");
+    console.log("  POST /auth/openrouter (Save API key)");
+    console.log("  DELETE /auth/openrouter (Remove API key)");
+    console.log("  GET  /auth/claude (OAuth initiate)");
+    console.log("  GET  /auth/claude/callback (OAuth callback)");
+    console.log("  DELETE /auth/claude (Disconnect)");
+    console.log("  GET  /auth/status (All providers)");
   });
 
   // Graceful shutdown
   const shutdown = async () => {
-    console.log('Shutting down...');
+    console.log("Shutting down...");
     server.close();
     await kbWorker.close();
     await closeSyncQueue();
@@ -89,11 +87,11 @@ async function main() {
     process.exit(0);
   };
 
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
 }
 
 main().catch((err) => {
-  console.error('Fatal error:', err);
+  console.error("Fatal error:", err);
   process.exit(1);
 });

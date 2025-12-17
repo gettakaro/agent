@@ -1,22 +1,22 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const getOnlinePlayers: ToolDefinition = {
-  name: 'getOnlinePlayers',
-  description: 'Get list of players currently online on a game server. Useful for testing commands on real players.',
+  name: "getOnlinePlayers",
+  description: "Get list of players currently online on a game server. Useful for testing commands on real players.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       gameServerId: {
-        type: 'string',
-        description: 'The game server ID to get online players from',
+        type: "string",
+        description: "The game server ID to get online players from",
       },
     },
-    required: ['gameServerId'],
+    required: ["gameServerId"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const gameServerId = args.gameServerId as string;

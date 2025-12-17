@@ -1,4 +1,26 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: takaro-agent-app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3100:3100"
+    env_file:
+      - .env
+    environment:
+      # Docker-only overrides: point to container hostnames instead of localhost
+      DATABASE_URL: postgresql://takaro:takaro@postgres:5432/takaro_agent
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   postgres:
     image: pgvector/pgvector:pg16
     container_name: takaro-agent-db

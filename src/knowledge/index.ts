@@ -1,60 +1,56 @@
 // Types
-export type {
-  KnowledgeBase,
-  IKnowledgeBaseFactory,
-  IngestionConfig,
-  Document,
-  SearchResult,
-  SearchOptions,
-  IngestResult,
-} from './types.js';
-
-// Registry
-export { knowledgeRegistry, type ResolvedKnowledgeBase } from './registry.js';
 
 // Embeddings
 export {
   generateEmbedding,
   generateEmbeddings,
-  getEmbeddingModel,
   getEmbeddingDimensions,
-} from './embeddings.js';
-
-// Vector store
-export {
-  vectorSearch,
-  upsertDocuments,
-  deleteByKnowledgeBase,
-  deleteBySourceFile,
-  getDocumentCount,
-} from './vectorStore.js';
-
+  getEmbeddingModel,
+} from "./embeddings.js";
 // Ingestion
 export {
-  ingestFromGitHub,
-  parseGitHubUrl,
-  fetchGitHubDirectory,
-  listGitHubFiles,
-  fetchFileContent,
-  chunkText,
-  chunkFiles,
   type Chunk,
   type ChunkOptions,
+  chunkFiles,
+  chunkText,
+  fetchFileContent,
+  fetchGitHubDirectory,
   type IngestFromGitHubOptions,
-} from './ingest/index.js';
-
+  ingestFromGitHub,
+  listGitHubFiles,
+  parseGitHubUrl,
+} from "./ingest/index.js";
 // Jobs (BullMQ-based sync)
 export {
-  startSyncWorker,
-  scheduleKBSyncJobs,
-  unscheduleKBSyncJob,
-  getSyncQueue,
-  closeSyncQueue,
   closeRedisConnection,
+  closeSyncQueue,
   getLastCommitSha,
-  setLastCommitSha,
   getLastSyncTime,
+  getSyncQueue,
   KB_SYNC_QUEUE,
   type KBSyncJobData,
   type KBSyncResult,
-} from './jobs/index.js';
+  scheduleKBSyncJobs,
+  setLastCommitSha,
+  startSyncWorker,
+  unscheduleKBSyncJob,
+} from "./jobs/index.js";
+// Registry
+export { knowledgeRegistry, type ResolvedKnowledgeBase } from "./registry.js";
+export type {
+  Document,
+  IKnowledgeBaseFactory,
+  IngestionConfig,
+  IngestResult,
+  KnowledgeBase,
+  SearchOptions,
+  SearchResult,
+} from "./types.js";
+// Vector store
+export {
+  deleteByKnowledgeBase,
+  deleteBySourceFile,
+  getDocumentCount,
+  upsertDocuments,
+  vectorSearch,
+} from "./vectorStore.js";

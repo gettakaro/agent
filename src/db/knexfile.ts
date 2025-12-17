@@ -1,11 +1,11 @@
-import type { Knex } from 'knex';
+import type { Knex } from "knex";
 
 const config: Knex.Config = {
-  client: 'pg',
-  connection: process.env['DATABASE_URL'],
+  client: "pg",
+  connection: process.env.DATABASE_URL,
   migrations: {
-    directory: './migrations',
-    extension: 'ts',
+    directory: "./migrations",
+    extension: "ts",
   },
 };
 

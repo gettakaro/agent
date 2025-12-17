@@ -1,10 +1,10 @@
-import type { AgentVersionConfig } from '../types.js';
-import { SYSTEM_PROMPT_V1 } from './prompts/v1.js';
-import { playerModeratorTools } from './tools/index.js';
+import type { AgentVersionConfig } from "../types.js";
+import { SYSTEM_PROMPT_V1 } from "./prompts/v1.js";
+import { playerModeratorTools } from "./tools/index.js";
 
 export const PLAYER_MODERATOR_EXPERIMENTS: Record<string, AgentVersionConfig> = {
-  'default': {
-    model: 'x-ai/grok-code-fast-1',
+  default: {
+    model: "x-ai/grok-code-fast-1",
     systemPrompt: SYSTEM_PROMPT_V1,
     tools: playerModeratorTools,
     temperature: 0.5,
@@ -12,4 +12,4 @@ export const PLAYER_MODERATOR_EXPERIMENTS: Record<string, AgentVersionConfig> = 
   },
 };
 
-export const DEFAULT_EXPERIMENT = 'default';
+export const DEFAULT_EXPERIMENT = "default";

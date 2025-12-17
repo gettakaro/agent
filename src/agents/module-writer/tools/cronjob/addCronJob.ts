@@ -1,36 +1,36 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const addCronJob: ToolDefinition = {
-  name: 'addCronJob',
+  name: "addCronJob",
   description:
-    'Add a cron job to the current module version. Cron jobs run on a schedule defined by a cron expression. Requires createModule to be called first.',
+    "Add a cron job to the current module version. Cron jobs run on a schedule defined by a cron expression. Requires createModule to be called first.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       name: {
-        type: 'string',
-        description: 'Internal cron job name (used as identifier)',
+        type: "string",
+        description: "Internal cron job name (used as identifier)",
       },
       temporalValue: {
-        type: 'string',
+        type: "string",
         description: 'Cron expression (e.g., "*/30 * * * *" for every 30 minutes, "0 * * * *" for every hour)',
       },
       function: {
-        type: 'string',
+        type: "string",
         description:
-          'JavaScript code that executes on schedule. Has access to takaro, data (with gameServerId, module), and TakaroUserError from @takaro/helpers.',
+          "JavaScript code that executes on schedule. Has access to takaro, data (with gameServerId, module), and TakaroUserError from @takaro/helpers.",
       },
       description: {
-        type: 'string',
-        description: 'Description of what this cron job does',
+        type: "string",
+        description: "Description of what this cron job does",
       },
     },
-    required: ['name', 'temporalValue', 'function'],
+    required: ["name", "temporalValue", "function"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const versionId = context.state.versionId as string | undefined;
@@ -38,7 +38,7 @@ export const addCronJob: ToolDefinition = {
       return {
         success: false,
         output: null,
-        error: 'No module version found. Call createModule first.',
+        error: "No module version found. Call createModule first.",
       };
     }
 

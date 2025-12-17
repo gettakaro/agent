@@ -1,44 +1,44 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const searchEvents: ToolDefinition = {
-  name: 'searchEvents',
+  name: "searchEvents",
   description:
-    'Search for events/execution logs. Essential for debugging - shows command/hook/cronjob execution results including console.log outputs and API call traces.',
+    "Search for events/execution logs. Essential for debugging - shows command/hook/cronjob execution results including console.log outputs and API call traces.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       eventName: {
-        type: 'array',
-        items: { type: 'string' },
+        type: "array",
+        items: { type: "string" },
         description:
           'Filter by event names. Common values: "command-executed", "hook-executed", "cronjob-executed", "chat-message", "player-connected"',
       },
       gameserverId: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Filter by game server IDs',
+        type: "array",
+        items: { type: "string" },
+        description: "Filter by game server IDs",
       },
       moduleId: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Filter by module IDs',
+        type: "array",
+        items: { type: "string" },
+        description: "Filter by module IDs",
       },
       playerId: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Filter by player IDs',
+        type: "array",
+        items: { type: "string" },
+        description: "Filter by player IDs",
       },
       limit: {
-        type: 'number',
-        description: 'Maximum number of results (default: 10)',
+        type: "number",
+        description: "Maximum number of results (default: 10)",
       },
       sortBy: {
-        type: 'string',
+        type: "string",
         description: 'Field to sort by (default: "createdAt")',
       },
       sortDirection: {
-        type: 'string',
-        enum: ['asc', 'desc'],
+        type: "string",
+        enum: ["asc", "desc"],
         description: 'Sort direction (default: "desc" for newest first)',
       },
     },
@@ -46,13 +46,13 @@ export const searchEvents: ToolDefinition = {
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const searchParams: Record<string, unknown> = {
       limit: (args.limit as number) || 10,
-      sortBy: (args.sortBy as string) || 'createdAt',
-      sortDirection: (args.sortDirection as string) || 'desc',
+      sortBy: (args.sortBy as string) || "createdAt",
+      sortDirection: (args.sortDirection as string) || "desc",
     };
 
     const filters: Record<string, unknown> = {};

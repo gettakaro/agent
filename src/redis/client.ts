@@ -1,22 +1,22 @@
-import { createClient, RedisClientType } from 'redis';
-import { config } from '../config.js';
+import { createClient, type RedisClientType } from "redis";
+import { config } from "../config.js";
 
 let redis: RedisClientType | null = null;
 
 export async function initRedis(): Promise<void> {
   redis = createClient({ url: config.redisUrl });
 
-  redis.on('error', (err) => {
-    console.error('Redis client error:', err);
+  redis.on("error", (err) => {
+    console.error("Redis client error:", err);
   });
 
   await redis.connect();
-  console.log('Connected to Redis');
+  console.log("Connected to Redis");
 }
 
 export function getRedis(): RedisClientType {
   if (!redis) {
-    throw new Error('Redis not initialized. Call initRedis() first.');
+    throw new Error("Redis not initialized. Call initRedis() first.");
   }
   return redis;
 }

@@ -1,5 +1,5 @@
-import type { IAgentFactory, IAgent } from './types.js';
-import { parseAgentId } from './experiments.js';
+import { parseAgentId } from "./experiments.js";
+import type { IAgent, IAgentFactory } from "./types.js";
 
 export interface ResolvedAgent {
   factory: IAgentFactory;
@@ -38,8 +38,7 @@ class AgentRegistry {
     const factory = this.factories.get(base);
     if (!factory) return undefined;
 
-    const experimentOrVersion =
-      experiment ?? version ?? factory.getDefaultVersion();
+    const experimentOrVersion = experiment ?? version ?? factory.getDefaultVersion();
     return { factory, experimentOrVersion };
   }
 

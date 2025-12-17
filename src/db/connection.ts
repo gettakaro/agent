@@ -1,12 +1,12 @@
-import knex, { Knex } from 'knex';
-import { config } from '../config.js';
+import knex, { type Knex } from "knex";
+import { config } from "../config.js";
 
 let db: Knex | null = null;
 
 export function getDb(): Knex {
   if (!db) {
     db = knex({
-      client: 'pg',
+      client: "pg",
       connection: config.databaseUrl,
       pool: {
         min: 2,

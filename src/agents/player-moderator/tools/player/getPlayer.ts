@@ -1,23 +1,23 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const getPlayer: ToolDefinition = {
-  name: 'getPlayer',
+  name: "getPlayer",
   description:
-    'Get detailed information about a specific player, including their roles and identifiers. Use searchPlayers first to find the player ID.',
+    "Get detailed information about a specific player, including their roles and identifiers. Use searchPlayers first to find the player ID.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       playerId: {
-        type: 'string',
-        description: 'The player ID to look up',
+        type: "string",
+        description: "The player ID to look up",
       },
     },
-    required: ['playerId'],
+    required: ["playerId"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const playerId = args.playerId as string;

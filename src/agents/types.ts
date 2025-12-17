@@ -1,9 +1,9 @@
-import type { JSONSchema7 } from 'json-schema';
-import type { Client } from '@takaro/apiclient';
+import type { Client } from "@takaro/apiclient";
+import type { JSONSchema7 } from "json-schema";
 
 // Message types
 export interface Message {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
   toolExecutions?: ToolExecution[];
 }
@@ -32,10 +32,10 @@ export interface ToolExecution {
 
 // Stream chunk types for real-time responses
 export type StreamChunk =
-  | { type: 'text'; content: string }
-  | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
-  | { type: 'tool_result'; id: string; name: string; result: ToolResult; durationMs: number }
-  | { type: 'done'; usage: TokenUsage };
+  | { type: "text"; content: string }
+  | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> }
+  | { type: "tool_result"; id: string; name: string; result: ToolResult; durationMs: number }
+  | { type: "done"; usage: TokenUsage };
 
 export interface TokenUsage {
   inputTokens: number;
@@ -49,7 +49,7 @@ export interface AgentResponse {
   latencyMs: number;
 }
 
-export type LLMProvider = 'openrouter';
+export type LLMProvider = "openrouter";
 
 // Tool context passed to tool execution
 export interface ToolContext {
@@ -70,10 +70,7 @@ export interface ToolDefinition {
   parameters: JSONSchema7;
   /** Internal variant identifier for A/B testing. Not exposed to LLM. */
   variant?: string;
-  execute: (
-    args: Record<string, unknown>,
-    context: ToolContext
-  ) => Promise<ToolResult>;
+  execute: (args: Record<string, unknown>, context: ToolContext) => Promise<ToolResult>;
 }
 
 // Agent version configuration
@@ -91,11 +88,7 @@ export interface IAgent {
   readonly version: string;
   readonly config: AgentVersionConfig;
 
-  chat(
-    messages: Message[],
-    context: ToolContext,
-    onChunk?: (chunk: StreamChunk) => void
-  ): Promise<AgentResponse>;
+  chat(messages: Message[], context: ToolContext, onChunk?: (chunk: StreamChunk) => void): Promise<AgentResponse>;
 }
 
 // Agent factory interface
