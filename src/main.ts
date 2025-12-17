@@ -6,6 +6,14 @@ import { PlayerModeratorFactory } from './agents/player-moderator/index.js';
 import { getDb, closeDb } from './db/connection.js';
 import { initServiceClient } from './takaro/client.js';
 import { initRedis, closeRedis } from './redis/client.js';
+import {
+  knowledgeRegistry,
+  startSyncWorker,
+  scheduleKBSyncJobs,
+  closeRedisConnection as closeKBRedis,
+  closeSyncQueue,
+} from './knowledge/index.js';
+import { TakaroDocsFactory } from './knowledge/takaro-docs/index.js';
 
 async function main() {
   console.log('Starting Takaro Agent service...');
@@ -17,6 +25,12 @@ async function main() {
   agentRegistry.register(new ModuleWriterFactory());
   agentRegistry.register(new PlayerModeratorFactory());
   console.log(`Registered agents: ${agentRegistry.listAgents().join(', ')}`);
+
+  // Register knowledge bases
+  knowledgeRegistry.register(new TakaroDocsFactory());
+  console.log(
+    `Registered knowledge bases: ${knowledgeRegistry.listKnowledgeBases().join(', ')}`
+  );
 
   // Test database connection
   try {
@@ -35,6 +49,12 @@ async function main() {
     console.error('Failed to connect to Redis:', err);
     process.exit(1);
   }
+
+  // Start KB sync worker and schedule sync jobs
+  const kbWorker = startSyncWorker();
+  console.log('KB sync worker started');
+
+  await scheduleKBSyncJobs();
 
   // Create and start Express app
   const app = createApp();
@@ -61,6 +81,9 @@ async function main() {
   const shutdown = async () => {
     console.log('Shutting down...');
     server.close();
+    await kbWorker.close();
+    await closeSyncQueue();
+    await closeKBRedis();
     await closeRedis();
     await closeDb();
     process.exit(0);

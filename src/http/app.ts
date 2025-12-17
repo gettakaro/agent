@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '../config.js';
 import { conversationRoutes } from './routes/conversations.js';
+import { knowledgeRoutes } from './routes/knowledge.js';
 import { viewRoutes } from './routes/views.js';
 import authRoutes from './routes/auth.js';
 import { formatError } from '../utils/formatError.js';
@@ -60,6 +61,7 @@ export function createApp(): Express {
   // API routes
   app.use('/auth', authRoutes);
   app.use('/api/conversations', conversationRoutes);
+  app.use('/api/knowledge-bases', knowledgeRoutes);
 
   // Error handler
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

@@ -112,4 +112,12 @@ router.get('/settings', async (req: AuthenticatedRequest, res: Response) => {
   });
 });
 
+// Knowledge bases page
+router.get('/knowledge', async (req: AuthenticatedRequest, res: Response) => {
+  res.render('knowledge', {
+    title: 'Knowledge Bases',
+    user: req.user,
+  });
+});
+
 export { router as viewRoutes };
