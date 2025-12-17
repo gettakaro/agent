@@ -1,4 +1,5 @@
 import { type Response, Router } from "express";
+import { parseAgentId } from "../../agents/experiments.js";
 import { agentRegistry } from "../../agents/registry.js";
 import type { StreamChunk, ToolContext } from "../../agents/types.js";
 import { ApiKeyService } from "../../auth/api-key.service.js";
@@ -296,6 +297,21 @@ router.post("/:id/messages", async (req: AuthenticatedRequest, res: Response) =>
     } else {
       res.status(500).json({ error: message });
     }
+  }
+});
+
+// Get conversations by agent
+router.get("/by-agent/:agentId", async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { base, experiment } = parseAgentId(req.params.agentId!);
+    const limit = Math.min(parseInt(req.query.limit as string, 10) || 5, 20);
+
+    const conversations = await conversationService.listByAgent(req.user!.id, base, experiment || "default", limit);
+
+    res.json({ data: conversations });
+  } catch (error) {
+    console.error("Error listing conversations by agent:", formatError(error));
+    res.status(500).json({ error: "Failed to list conversations" });
   }
 });
 

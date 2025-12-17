@@ -1,34 +1,384 @@
 <%- include('partials/header') %>
 
-<div class="page">
-  <div class="page-header">
-    <h1>Agents</h1>
-    <a href="/new" class="btn btn-primary">New Chat</a>
-  </div>
+<style>
+  /* Override container for full-width layout */
+  main.container {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+</style>
 
-  <% if (experiments.length === 0) { %>
-    <div class="empty-state">
-      <p>No agents registered</p>
+<div class="agents-layout">
+  <!-- Mobile sidebar toggle -->
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+    <span class="hamburger-icon">&#9776;</span>
+  </button>
+
+  <!-- Overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="agents-sidebar" id="agentsSidebar">
+    <div class="sidebar-header">
+      <h2>Agents</h2>
     </div>
-  <% } else { %>
-    <div class="experiment-list">
-      <% experiments.forEach(exp => { %>
-        <div class="experiment-row">
-          <div class="experiment-info">
-            <div class="experiment-name">
-              <span class="experiment-type"><%= exp.type %></span>
-              <span class="experiment-separator">/</span>
-              <span class="experiment-variant"><%= exp.experiment %></span>
+    <div class="agent-groups" id="agentGroups">
+      <% if (groupedAgents.length === 0) { %>
+        <div class="empty-state">
+          <p>No agents registered</p>
+        </div>
+      <% } else { %>
+        <% groupedAgents.forEach(group => { %>
+          <div class="agent-group" data-type="<%= group.type %>">
+            <div class="agent-group-header" onclick="toggleGroup(this)">
+              <span class="agent-group-icon">&#9660;</span>
+              <span class="agent-group-name"><%= group.type %></span>
+              <span class="agent-group-count"><%= group.experiments.length %></span>
             </div>
-            <div class="experiment-model">
-              <span class="text-muted"><%= exp.model %></span>
+            <div class="agent-group-items">
+              <% group.experiments.forEach(exp => { %>
+                <div
+                  class="agent-item<%= selectedAgent && selectedAgent.id === exp.id ? ' active' : '' %>"
+                  data-id="<%= exp.id %>"
+                  onclick="selectAgent('<%= exp.id %>')"
+                >
+                  <span class="agent-item-name"><%= exp.experiment %></span>
+                </div>
+              <% }) %>
             </div>
           </div>
-          <a href="/new?agent=<%= exp.id %>" class="btn btn-primary btn-small">Start Chat</a>
-        </div>
-      <% }) %>
+        <% }) %>
+      <% } %>
     </div>
-  <% } %>
+  </aside>
+
+  <!-- Main content area -->
+  <main class="agents-main" id="agentsMain">
+    <% if (!selectedAgent) { %>
+      <div class="empty-state" id="emptyState">
+        <p>Select an agent to view details</p>
+      </div>
+    <% } else { %>
+      <div class="agent-detail" id="agentDetail">
+        <div class="agent-detail-header">
+          <div class="agent-detail-title">
+            <span class="agent-type-badge"><%= selectedAgent.type %></span>
+            <h1><%= selectedAgent.experiment %></h1>
+          </div>
+          <a href="/new?agent=<%= selectedAgent.id %>" class="btn btn-primary">Start Chat</a>
+        </div>
+
+        <p class="agent-description"><%= selectedAgent.description %></p>
+
+        <div class="agent-meta-grid">
+          <div class="agent-meta-item">
+            <span class="agent-meta-label">Model</span>
+            <span class="agent-meta-value"><%= selectedAgent.model %></span>
+          </div>
+          <% if (selectedAgent.temperature !== undefined) { %>
+          <div class="agent-meta-item">
+            <span class="agent-meta-label">Temperature</span>
+            <span class="agent-meta-value"><%= selectedAgent.temperature %></span>
+          </div>
+          <% } %>
+          <% if (selectedAgent.maxTokens !== undefined) { %>
+          <div class="agent-meta-item">
+            <span class="agent-meta-label">Max Tokens</span>
+            <span class="agent-meta-value"><%= selectedAgent.maxTokens.toLocaleString() %></span>
+          </div>
+          <% } %>
+          <div class="agent-meta-item">
+            <span class="agent-meta-label">Tools</span>
+            <span class="agent-meta-value"><%= selectedAgent.toolCount %></span>
+          </div>
+        </div>
+
+        <!-- Recent Conversations -->
+        <div class="agent-section">
+          <div class="agent-section-header" onclick="toggleSection(this)">
+            <span class="agent-section-icon">&#9660;</span>
+            <h3>Recent Conversations (<%= recentConversations.length %>)</h3>
+          </div>
+          <div class="agent-section-content">
+            <% if (recentConversations.length === 0) { %>
+              <p class="text-muted">No conversations yet</p>
+            <% } else { %>
+              <div class="conversation-list-compact">
+                <% recentConversations.forEach(conv => { %>
+                  <a href="/?id=<%= conv.id %>" class="conversation-item-compact">
+                    <span class="conversation-title"><%= conv.title || 'Untitled conversation' %></span>
+                    <span class="conversation-date"><%= conv.updatedAt.toLocaleDateString() %></span>
+                  </a>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <% if (selectedAgent.knowledgeBases.length > 0) { %>
+        <!-- Knowledge Bases -->
+        <div class="agent-section">
+          <div class="agent-section-header" onclick="toggleSection(this)">
+            <span class="agent-section-icon">&#9660;</span>
+            <h3>Knowledge Bases (<%= selectedAgent.knowledgeBases.length %>)</h3>
+          </div>
+          <div class="agent-section-content">
+            <div class="kb-list">
+              <% selectedAgent.knowledgeBases.forEach(kb => { %>
+                <span class="badge badge-outline"><%= kb %></span>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Available Tools -->
+        <div class="agent-section">
+          <div class="agent-section-header" onclick="toggleSection(this)">
+            <span class="agent-section-icon">&#9660;</span>
+            <h3>Available Tools (<%= selectedAgent.tools.length %>)</h3>
+          </div>
+          <div class="agent-section-content">
+            <div class="tools-grid">
+              <% selectedAgent.tools.forEach(tool => { %>
+                <div class="tool-card">
+                  <div class="tool-card-name"><%= tool.name %></div>
+                  <div class="tool-card-description"><%= tool.description %></div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Prompt -->
+        <div class="agent-section">
+          <div class="agent-section-header" onclick="toggleSection(this)">
+            <span class="agent-section-icon">&#9660;</span>
+            <h3>System Prompt</h3>
+          </div>
+          <div class="agent-section-content">
+            <div class="system-prompt-container">
+              <pre class="system-prompt-preview" id="promptPreview"><%= selectedAgent.systemPromptPreview %></pre>
+              <pre class="system-prompt-full hidden" id="promptFull"><%= selectedAgent.systemPromptFull %></pre>
+            </div>
+            <button class="btn btn-small btn-secondary" onclick="toggleSystemPrompt(event)" style="margin-top: 0.5rem;">
+              <span id="togglePromptText">Show Full</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </main>
 </div>
+
+<script>
+  // Store all agent data for client-side navigation
+  const agentData = <%- JSON.stringify(experiments) %>;
+  let currentAgentId = '<%= selectedAgent ? selectedAgent.id : "" %>';
+
+  // Sidebar toggle for mobile
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebar = document.getElementById('agentsSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+
+  function toggleSidebar() {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  }
+
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', toggleSidebar);
+  }
+  if (overlay) {
+    overlay.addEventListener('click', toggleSidebar);
+  }
+
+  function toggleGroup(header) {
+    const group = header.closest('.agent-group');
+    group.classList.toggle('collapsed');
+    const icon = header.querySelector('.agent-group-icon');
+    icon.innerHTML = group.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  }
+
+  function toggleSection(header) {
+    const section = header.closest('.agent-section');
+    section.classList.toggle('collapsed');
+    const icon = header.querySelector('.agent-section-icon');
+    icon.innerHTML = section.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  }
+
+  async function selectAgent(id) {
+    if (id === currentAgentId) return;
+
+    // Close mobile sidebar
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+
+    // Update URL
+    history.pushState({}, '', '/agents?id=' + encodeURIComponent(id));
+
+    // Update active state in sidebar
+    document.querySelectorAll('.agent-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.id === id);
+    });
+
+    // Find agent data
+    const agent = agentData.find(a => a.id === id);
+    if (agent) {
+      currentAgentId = id;
+
+      // Fetch recent conversations for this agent
+      let conversations = [];
+      try {
+        const res = await fetch('/api/conversations/by-agent/' + encodeURIComponent(id) + '?limit=5');
+        const data = await res.json();
+        conversations = data.data || [];
+      } catch (e) {
+        console.error('Failed to fetch conversations:', e);
+      }
+
+      renderAgentDetail(agent, conversations);
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function renderAgentDetail(agent, conversations = []) {
+    const main = document.getElementById('agentsMain');
+
+    const conversationsHtml = conversations.length > 0
+      ? conversations.map(conv => `
+          <a href="/?id=${conv.id}" class="conversation-item-compact">
+            <span class="conversation-title">${escapeHtml(conv.title || 'Untitled conversation')}</span>
+            <span class="conversation-date">${new Date(conv.updatedAt).toLocaleDateString()}</span>
+          </a>
+        `).join('')
+      : '<p class="text-muted">No conversations yet</p>';
+
+    const kbHtml = agent.knowledgeBases.length > 0 ? `
+      <div class="agent-section">
+        <div class="agent-section-header" onclick="toggleSection(this)">
+          <span class="agent-section-icon">&#9660;</span>
+          <h3>Knowledge Bases (${agent.knowledgeBases.length})</h3>
+        </div>
+        <div class="agent-section-content">
+          <div class="kb-list">
+            ${agent.knowledgeBases.map(kb => `<span class="badge badge-outline">${escapeHtml(kb)}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    const toolsHtml = agent.tools.map(tool => `
+      <div class="tool-card">
+        <div class="tool-card-name">${escapeHtml(tool.name)}</div>
+        <div class="tool-card-description">${escapeHtml(tool.description)}</div>
+      </div>
+    `).join('');
+
+    const tempHtml = agent.temperature !== undefined ? `
+      <div class="agent-meta-item">
+        <span class="agent-meta-label">Temperature</span>
+        <span class="agent-meta-value">${agent.temperature}</span>
+      </div>` : '';
+
+    const maxTokensHtml = agent.maxTokens !== undefined ? `
+      <div class="agent-meta-item">
+        <span class="agent-meta-label">Max Tokens</span>
+        <span class="agent-meta-value">${agent.maxTokens.toLocaleString()}</span>
+      </div>` : '';
+
+    main.innerHTML = `
+      <div class="agent-detail" id="agentDetail">
+        <div class="agent-detail-header">
+          <div class="agent-detail-title">
+            <span class="agent-type-badge">${escapeHtml(agent.type)}</span>
+            <h1>${escapeHtml(agent.experiment)}</h1>
+          </div>
+          <a href="/new?agent=${encodeURIComponent(agent.id)}" class="btn btn-primary">Start Chat</a>
+        </div>
+
+        <p class="agent-description">${escapeHtml(agent.description)}</p>
+
+        <div class="agent-meta-grid">
+          <div class="agent-meta-item">
+            <span class="agent-meta-label">Model</span>
+            <span class="agent-meta-value">${escapeHtml(agent.model)}</span>
+          </div>
+          ${tempHtml}
+          ${maxTokensHtml}
+          <div class="agent-meta-item">
+            <span class="agent-meta-label">Tools</span>
+            <span class="agent-meta-value">${agent.toolCount}</span>
+          </div>
+        </div>
+
+        <div class="agent-section">
+          <div class="agent-section-header" onclick="toggleSection(this)">
+            <span class="agent-section-icon">&#9660;</span>
+            <h3>Recent Conversations (${conversations.length})</h3>
+          </div>
+          <div class="agent-section-content">
+            <div class="conversation-list-compact">${conversationsHtml}</div>
+          </div>
+        </div>
+
+        ${kbHtml}
+
+        <div class="agent-section">
+          <div class="agent-section-header" onclick="toggleSection(this)">
+            <span class="agent-section-icon">&#9660;</span>
+            <h3>Available Tools (${agent.tools.length})</h3>
+          </div>
+          <div class="agent-section-content">
+            <div class="tools-grid">${toolsHtml}</div>
+          </div>
+        </div>
+
+        <div class="agent-section">
+          <div class="agent-section-header" onclick="toggleSection(this)">
+            <span class="agent-section-icon">&#9660;</span>
+            <h3>System Prompt</h3>
+          </div>
+          <div class="agent-section-content">
+            <div class="system-prompt-container">
+              <pre class="system-prompt-preview" id="promptPreview">${escapeHtml(agent.systemPromptPreview)}</pre>
+              <pre class="system-prompt-full hidden" id="promptFull">${escapeHtml(agent.systemPromptFull)}</pre>
+            </div>
+            <button class="btn btn-small btn-secondary" onclick="toggleSystemPrompt(event)" style="margin-top: 0.5rem;">
+              <span id="togglePromptText">Show Full</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function toggleSystemPrompt(event) {
+    if (event) event.stopPropagation();
+    const preview = document.getElementById('promptPreview');
+    const full = document.getElementById('promptFull');
+    const toggleText = document.getElementById('togglePromptText');
+
+    preview.classList.toggle('hidden');
+    full.classList.toggle('hidden');
+    toggleText.textContent = full.classList.contains('hidden') ? 'Show Full' : 'Show Preview';
+  }
+
+  // Handle browser back/forward
+  window.addEventListener('popstate', () => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (id && id !== currentAgentId) {
+      selectAgent(id);
+    }
+  });
+</script>
 
 <%- include('partials/footer') %>

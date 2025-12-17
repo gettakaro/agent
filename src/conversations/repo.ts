@@ -16,6 +16,18 @@ export class ConversationRepo {
     return rows.map(this.mapConversation);
   }
 
+  async listByAgent(userId: string, agentId: string, agentVersion: string, limit = 5): Promise<Conversation[]> {
+    const db = getDb();
+    const rows = await db("conversations")
+      .where("user_id", userId)
+      .where("agent_id", agentId)
+      .where("agent_version", agentVersion)
+      .orderBy("updated_at", "desc")
+      .limit(limit);
+
+    return rows.map(this.mapConversation);
+  }
+
   async create(data: ConversationCreate): Promise<Conversation> {
     const db = getDb();
     const [row] = await db("conversations")

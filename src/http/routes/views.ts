@@ -5,7 +5,33 @@ import { ApiKeyService } from "../../auth/api-key.service.js";
 import { ConversationService } from "../../conversations/service.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 
-// Helper to get experiment info for templates
+// Types for enhanced agent info
+interface ToolInfo {
+  name: string;
+  description: string;
+}
+
+interface AgentExperimentInfo {
+  id: string;
+  type: string;
+  experiment: string;
+  model: string;
+  description: string;
+  temperature?: number;
+  maxTokens?: number;
+  systemPromptPreview: string;
+  systemPromptFull: string;
+  tools: ToolInfo[];
+  knowledgeBases: string[];
+  toolCount: number;
+}
+
+interface GroupedAgents {
+  type: string;
+  experiments: AgentExperimentInfo[];
+}
+
+// Helper to get basic experiment info for templates (used by chat page)
 function getExperimentInfo() {
   return agentRegistry.listAgents().map((compoundId) => {
     const { base, experiment } = parseAgentId(compoundId);
@@ -18,6 +44,61 @@ function getExperimentInfo() {
       model: model || "unknown",
     };
   });
+}
+
+// Helper to detect KB usage from experiment name
+function detectKnowledgeBases(experiment: string): string[] {
+  if (experiment === "with-docs") {
+    return ["takaro-docs"];
+  }
+  return [];
+}
+
+// Helper to get enhanced experiment info for agents page
+function getEnhancedExperimentInfo(): AgentExperimentInfo[] {
+  return agentRegistry.listAgents().map((compoundId) => {
+    const { base, experiment } = parseAgentId(compoundId);
+    const resolved = agentRegistry.resolve(compoundId);
+    const agent = resolved?.factory.createAgent(resolved.experimentOrVersion);
+    const config = agent?.config;
+
+    const systemPrompt = config?.systemPrompt || "";
+    const expName = experiment || "default";
+
+    return {
+      id: compoundId,
+      type: base,
+      experiment: expName,
+      model: config?.model || "unknown",
+      description: config?.description || "No description available",
+      temperature: config?.temperature,
+      maxTokens: config?.maxTokens,
+      systemPromptPreview: systemPrompt.substring(0, 500) + (systemPrompt.length > 500 ? "..." : ""),
+      systemPromptFull: systemPrompt,
+      tools: (config?.tools || []).map((t) => ({
+        name: t.name,
+        description: t.description,
+      })),
+      knowledgeBases: detectKnowledgeBases(expName),
+      toolCount: config?.tools?.length || 0,
+    };
+  });
+}
+
+// Group experiments by agent type
+function groupAgentsByType(experiments: AgentExperimentInfo[]): GroupedAgents[] {
+  const groups = new Map<string, AgentExperimentInfo[]>();
+
+  for (const exp of experiments) {
+    const existing = groups.get(exp.type) || [];
+    existing.push(exp);
+    groups.set(exp.type, existing);
+  }
+
+  return Array.from(groups.entries()).map(([type, experiments]) => ({
+    type,
+    experiments,
+  }));
 }
 
 const router = Router();
@@ -57,11 +138,30 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
 
 // Agents list
 router.get("/agents", async (req: AuthenticatedRequest, res: Response) => {
-  const experiments = getExperimentInfo();
+  const experiments = getEnhancedExperimentInfo();
+  const groupedAgents = groupAgentsByType(experiments);
+  const selectedId = req.query.id as string | undefined;
+
+  // Find selected agent
+  const selectedAgent = selectedId ? experiments.find((e) => e.id === selectedId) : null;
+
+  // Fetch recent conversations for selected agent
+  let recentConversations: Awaited<ReturnType<typeof conversationService.listByAgent>> = [];
+  if (selectedAgent) {
+    recentConversations = await conversationService.listByAgent(
+      req.user!.id,
+      selectedAgent.type,
+      selectedAgent.experiment,
+      5,
+    );
+  }
 
   res.render("agents", {
     title: "Agents",
     experiments,
+    groupedAgents,
+    selectedAgent,
+    recentConversations,
     user: req.user,
   });
 });

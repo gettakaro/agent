@@ -9,6 +9,7 @@ export const PLAYER_MODERATOR_EXPERIMENTS: Record<string, AgentVersionConfig> = 
     tools: playerModeratorTools,
     temperature: 0.5,
     maxTokens: 4096,
+    description: "Manage players, bans, and roles. Investigate player activity and enforce server rules.",
   },
 };
 

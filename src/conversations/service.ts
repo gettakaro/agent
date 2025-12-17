@@ -13,6 +13,10 @@ export class ConversationService {
     return this.repo.listByUserId(userId);
   }
 
+  async listByAgent(userId: string, agentId: string, agentVersion: string, limit?: number): Promise<Conversation[]> {
+    return this.repo.listByAgent(userId, agentId, agentVersion, limit);
+  }
+
   async create(data: ConversationCreate): Promise<Conversation> {
     return this.repo.create(data);
   }

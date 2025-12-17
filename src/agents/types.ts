@@ -80,6 +80,7 @@ export interface AgentVersionConfig {
   tools: ToolDefinition[];
   temperature?: number;
   maxTokens?: number;
+  description?: string;
 }
 
 // Agent interface

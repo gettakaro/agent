@@ -25,6 +25,7 @@ const BASE_EXPERIMENTS: Record<string, AgentVersionConfig> = {
     tools: moduleWriterTools,
     temperature: 0.7,
     maxTokens: 8192,
+    description: "Fast module development using Grok. Balanced speed and quality for rapid prototyping.",
   },
   "gpt-oss": {
     model: "openai/gpt-4.1-nano",
@@ -32,6 +33,7 @@ const BASE_EXPERIMENTS: Record<string, AgentVersionConfig> = {
     tools: moduleWriterTools,
     temperature: 0.7,
     maxTokens: 8192,
+    description: "OpenAI-based module writer. General-purpose development with broad knowledge.",
   },
   concise: {
     model: "x-ai/grok-code-fast-1",
@@ -39,6 +41,7 @@ const BASE_EXPERIMENTS: Record<string, AgentVersionConfig> = {
     tools: moduleWriterTools,
     temperature: 0.5,
     maxTokens: 4096,
+    description: "Minimal, to-the-point responses. Lower token usage for experienced users.",
   },
 };
 
@@ -67,6 +70,7 @@ export function getExperimentConfig(experiment: string): AgentVersionConfig | un
       tools: [...moduleWriterTools, kb.searchTool],
       temperature: 0.7,
       maxTokens: 8192,
+      description: "Enhanced with Takaro documentation knowledge base for accurate API usage and best practices.",
     };
   }
 
