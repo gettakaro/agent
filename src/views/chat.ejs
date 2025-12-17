@@ -128,7 +128,7 @@
                       <% }) %>
                     </div>
                   <% } else { %>
-                    <div class="message-content"><%= part.text %></div>
+                    <div class="message-content" data-raw="<%= encodeURIComponent(part.text) %>"></div>
                   <% } %>
                 <% }) %>
               </div>
@@ -153,6 +153,23 @@
 </div>
 
 <script>
+  // Configure marked.js for markdown rendering with syntax highlighting
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+    highlight: function(code, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        return hljs.highlight(code, { language: lang }).value;
+      }
+      return hljs.highlightAuto(code).value;
+    }
+  });
+
+  function renderMarkdown(text) {
+    if (!text) return '';
+    return marked.parse(text);
+  }
+
   let currentConversationId = '<%= selectedConversation ? selectedConversation.id : "" %>';
   const pendingTools = new Map();
 
@@ -302,7 +319,7 @@
             });
             messagesHtml += '</div>';
           } else {
-            messagesHtml += '<div class="message-content">' + escapeHtml(part.text) + '</div>';
+            messagesHtml += '<div class="message-content">' + renderMarkdown(part.text) + '</div>';
           }
         });
         messagesHtml += '</div>';
@@ -383,7 +400,10 @@
           try {
             const data = JSON.parse(line.slice(6));
             if (data.type === 'text') {
-              assistantMsg.querySelector('.message-content').textContent += data.content;
+              // Accumulate raw content and re-render markdown
+              if (!assistantMsg._rawContent) assistantMsg._rawContent = '';
+              assistantMsg._rawContent += data.content;
+              assistantMsg.querySelector('.message-content').innerHTML = renderMarkdown(assistantMsg._rawContent);
             } else if (data.type === 'tool_use') {
               addPendingToolExecution(assistantMsg, data.id, data.name, data.input);
             } else if (data.type === 'tool_result') {
@@ -410,9 +430,11 @@
 
     const div = document.createElement('div');
     div.className = 'message message-' + role;
+    // Use markdown for assistant, escape for user
+    const renderedContent = role === 'assistant' ? renderMarkdown(content) : escapeHtml(content);
     div.innerHTML =
       '<div class="message-header"><span class="message-role">' + role + '</span></div>' +
-      '<div class="message-content">' + escapeHtml(content) + '</div>';
+      '<div class="message-content">' + renderedContent + '</div>';
     messagesContainer.appendChild(div);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     return div;
@@ -510,6 +532,13 @@
       }
     }
   }
+
+  // Render markdown for server-rendered messages
+  document.querySelectorAll('.message-content[data-raw]').forEach(el => {
+    const rawText = decodeURIComponent(el.dataset.raw);
+    el.innerHTML = renderMarkdown(rawText);
+    delete el.dataset.raw;
+  });
 
   // Scroll to bottom on load
   const messagesContainer = document.getElementById('messages');
