@@ -158,6 +158,69 @@ curl -N -X POST http://localhost:3100/api/conversations/{id}/messages \
 
 SSE events: `text`, `tool_use`, `tool_result`, `done`, `error`
 
+## Debugging Agent Behavior
+
+To test an agent's behavior with a specific prompt and inspect the full conversation:
+
+### 1. Create a conversation with the target agent
+
+```bash
+# For player-moderator agent
+curl -s -X POST http://localhost:3100/api/conversations \
+  -H "Content-Type: application/json" \
+  -d '{"agentId": "player-moderator"}' | jq .
+
+# For module-writer agent
+curl -s -X POST http://localhost:3100/api/conversations \
+  -H "Content-Type: application/json" \
+  -d '{"agentId": "module-writer"}' | jq .
+```
+
+Save the returned `id` for subsequent calls.
+
+### 2. Send a test message and observe SSE stream
+
+```bash
+curl -N -X POST http://localhost:3100/api/conversations/{id}/messages \
+  -H "Content-Type: application/json" \
+  -d '{"content": "your test prompt here"}'
+```
+
+The SSE stream shows real-time agent behavior:
+- `tool_use` - Which tool the agent called and with what input
+- `tool_result` - Success/failure and output (includes full error details for debugging)
+- `text` - The agent's text response chunks
+- `done` - Token usage stats
+
+### 3. Retrieve full conversation for inspection
+
+```bash
+curl -s http://localhost:3100/api/conversations/{id}/messages | jq .
+```
+
+This returns all messages with complete `toolExecutions` arrays showing:
+- Tool name and input arguments
+- Success/failure status
+- Full output or error message
+- Execution duration in ms
+
+### Example: Testing ban query
+
+```bash
+# Create conversation
+CONV_ID=$(curl -s -X POST http://localhost:3100/api/conversations \
+  -H "Content-Type: application/json" \
+  -d '{"agentId": "player-moderator"}' | jq -r '.data.id')
+
+# Send message
+curl -N -X POST "http://localhost:3100/api/conversations/$CONV_ID/messages" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "how many bans in the system"}'
+
+# Inspect full conversation
+curl -s "http://localhost:3100/api/conversations/$CONV_ID/messages" | jq .
+```
+
 ## @takaro/apiclient Notes
 
 Quirks discovered during tool development:
