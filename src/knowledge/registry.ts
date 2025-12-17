@@ -1,5 +1,5 @@
-import type { IKnowledgeBaseFactory, KnowledgeBase } from './types.js';
-import { parseAgentId } from '../agents/experiments.js';
+import { parseAgentId } from "../agents/experiments.js";
+import type { IKnowledgeBaseFactory, KnowledgeBase } from "./types.js";
 
 export interface ResolvedKnowledgeBase {
   factory: IKnowledgeBaseFactory;

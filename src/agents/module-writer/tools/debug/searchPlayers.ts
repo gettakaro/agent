@@ -1,34 +1,34 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const searchPlayers: ToolDefinition = {
-  name: 'searchPlayers',
+  name: "searchPlayers",
   description:
-    'Search for players. Useful for finding player IDs needed to test commands. Can search by name, steamId, or other identifiers.',
+    "Search for players. Useful for finding player IDs needed to test commands. Can search by name, steamId, or other identifiers.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       name: {
-        type: 'string',
-        description: 'Search by player name (partial match)',
+        type: "string",
+        description: "Search by player name (partial match)",
       },
       steamId: {
-        type: 'string',
-        description: 'Filter by Steam ID',
+        type: "string",
+        description: "Filter by Steam ID",
       },
       gameId: {
-        type: 'string',
-        description: 'Filter by game-specific ID',
+        type: "string",
+        description: "Filter by game-specific ID",
       },
       limit: {
-        type: 'number',
-        description: 'Maximum number of results (default: 20)',
+        type: "number",
+        description: "Maximum number of results (default: 20)",
       },
     },
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const searchParams: Record<string, unknown> = {

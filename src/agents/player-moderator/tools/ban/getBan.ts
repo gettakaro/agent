@@ -1,22 +1,22 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const getBan: ToolDefinition = {
-  name: 'getBan',
-  description: 'Get details of a specific ban by its ID.',
+  name: "getBan",
+  description: "Get details of a specific ban by its ID.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       banId: {
-        type: 'string',
-        description: 'The ban ID to look up',
+        type: "string",
+        description: "The ban ID to look up",
       },
     },
-    required: ['banId'],
+    required: ["banId"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const banId = args.banId as string;

@@ -1,10 +1,6 @@
-import { ConversationRepo } from './repo.js';
-import type {
-  Conversation,
-  ConversationCreate,
-  MessageRecord,
-} from './types.js';
-import type { Message } from '../agents/types.js';
+import type { Message } from "../agents/types.js";
+import { ConversationRepo } from "./repo.js";
+import type { Conversation, ConversationCreate, MessageRecord } from "./types.js";
 
 export class ConversationService {
   private repo = new ConversationRepo();
@@ -36,9 +32,9 @@ export class ConversationService {
   async getMessages(conversationId: string): Promise<Message[]> {
     const records = await this.repo.getMessages(conversationId);
     return records.map((r) => ({
-      role: r.role as 'user' | 'assistant' | 'system',
+      role: r.role as "user" | "assistant" | "system",
       content: r.content,
-      toolExecutions: r.toolExecutions as Message['toolExecutions'],
+      toolExecutions: r.toolExecutions as Message["toolExecutions"],
     }));
   }
 
@@ -49,7 +45,7 @@ export class ConversationService {
   async addMessage(
     conversationId: string,
     message: Message,
-    extra?: { tokenCount?: number; latencyMs?: number }
+    extra?: { tokenCount?: number; latencyMs?: number },
   ): Promise<MessageRecord> {
     return this.repo.addMessage(
       conversationId,
@@ -58,7 +54,7 @@ export class ConversationService {
         content: message.content,
         toolExecutions: message.toolExecutions,
       },
-      extra
+      extra,
     );
   }
 }

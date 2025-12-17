@@ -1,35 +1,34 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const assignRole: ToolDefinition = {
-  name: 'assignRole',
-  description:
-    'Assign a role to a player. Can be global or server-specific, permanent or temporary.',
+  name: "assignRole",
+  description: "Assign a role to a player. Can be global or server-specific, permanent or temporary.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       playerId: {
-        type: 'string',
-        description: 'The player ID to assign the role to',
+        type: "string",
+        description: "The player ID to assign the role to",
       },
       roleId: {
-        type: 'string',
-        description: 'The role ID to assign (use searchRoles to find it)',
+        type: "string",
+        description: "The role ID to assign (use searchRoles to find it)",
       },
       gameServerId: {
-        type: 'string',
-        description: 'The game server ID for server-specific role. Omit for global assignment.',
+        type: "string",
+        description: "The game server ID for server-specific role. Omit for global assignment.",
       },
       expiresAt: {
-        type: 'string',
-        description: 'ISO date string for when the role expires. Omit for permanent assignment.',
+        type: "string",
+        description: "ISO date string for when the role expires. Omit for permanent assignment.",
       },
     },
-    required: ['playerId', 'roleId'],
+    required: ["playerId", "roleId"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const playerId = args.playerId as string;
@@ -48,9 +47,7 @@ export const assignRole: ToolDefinition = {
         roleId,
         gameServerId: args.gameServerId || null,
         expiresAt: args.expiresAt || null,
-        message: args.expiresAt
-          ? `Role assigned until ${args.expiresAt}`
-          : 'Role assigned permanently',
+        message: args.expiresAt ? `Role assigned until ${args.expiresAt}` : "Role assigned permanently",
       },
     };
   },

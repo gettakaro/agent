@@ -1,22 +1,22 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const getCommand: ToolDefinition = {
-  name: 'getCommand',
-  description: 'Get details of a specific command by ID.',
+  name: "getCommand",
+  description: "Get details of a specific command by ID.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       id: {
-        type: 'string',
-        description: 'The command ID to retrieve',
+        type: "string",
+        description: "The command ID to retrieve",
       },
     },
-    required: ['id'],
+    required: ["id"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const id = args.id as string;

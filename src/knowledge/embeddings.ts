@@ -1,7 +1,7 @@
-import OpenAI from 'openai';
-import { config } from '../config.js';
+import OpenAI from "openai";
+import { config } from "../config.js";
 
-const EMBEDDING_MODEL = 'qwen/qwen3-embedding-8b';
+const EMBEDDING_MODEL = "qwen/qwen3-embedding-8b";
 const EMBEDDING_DIMENSIONS = 1536; // pgvector index limit is 2000
 
 let client: OpenAI | null = null;
@@ -9,13 +9,11 @@ let client: OpenAI | null = null;
 function getClient(): OpenAI {
   if (!client) {
     if (!config.openrouterApiKey) {
-      throw new Error(
-        'OPENROUTER_API_KEY is required for knowledge base embeddings'
-      );
+      throw new Error("OPENROUTER_API_KEY is required for knowledge base embeddings");
     }
     client = new OpenAI({
       apiKey: config.openrouterApiKey,
-      baseURL: 'https://openrouter.ai/api/v1',
+      baseURL: "https://openrouter.ai/api/v1",
     });
   }
   return client;
@@ -43,9 +41,7 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   });
 
   // Sort by index to ensure correct order
-  return response.data
-    .sort((a, b) => a.index - b.index)
-    .map((d) => d.embedding);
+  return response.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
 }
 
 /**

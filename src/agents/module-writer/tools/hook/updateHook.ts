@@ -1,60 +1,60 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const updateHook: ToolDefinition = {
-  name: 'updateHook',
-  description: 'Update an existing hook. You can update the name, description, regex, eventType, or function code.',
+  name: "updateHook",
+  description: "Update an existing hook. You can update the name, description, regex, eventType, or function code.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       id: {
-        type: 'string',
-        description: 'The hook ID to update',
+        type: "string",
+        description: "The hook ID to update",
       },
       name: {
-        type: 'string',
-        description: 'New hook name',
+        type: "string",
+        description: "New hook name",
       },
       eventType: {
-        type: 'string',
-        description: 'New event type',
+        type: "string",
+        description: "New event type",
         enum: [
-          'log',
-          'player-connected',
-          'player-disconnected',
-          'chat-message',
-          'player-death',
-          'entity-killed',
-          'discord-message',
-          'role-assigned',
-          'role-removed',
-          'command-executed',
-          'hook-executed',
-          'cronjob-executed',
-          'currency-added',
-          'currency-deducted',
-          'player-new-ip-detected',
-          'server-status-changed',
+          "log",
+          "player-connected",
+          "player-disconnected",
+          "chat-message",
+          "player-death",
+          "entity-killed",
+          "discord-message",
+          "role-assigned",
+          "role-removed",
+          "command-executed",
+          "hook-executed",
+          "cronjob-executed",
+          "currency-added",
+          "currency-deducted",
+          "player-new-ip-detected",
+          "server-status-changed",
         ],
       },
       regex: {
-        type: 'string',
-        description: 'New regex pattern',
+        type: "string",
+        description: "New regex pattern",
       },
       function: {
-        type: 'string',
-        description: 'New JavaScript code',
+        type: "string",
+        description: "New JavaScript code",
       },
       description: {
-        type: 'string',
-        description: 'New description',
+        type: "string",
+        description: "New description",
       },
     },
-    required: ['id'],
+    required: ["id"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const id = args.id as string;

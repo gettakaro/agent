@@ -1,4 +1,4 @@
-import type { ToolDefinition } from '../agents/types.js';
+import type { ToolDefinition } from "../agents/types.js";
 
 /**
  * A knowledge base that agents can query via its search tool.

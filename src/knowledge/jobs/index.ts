@@ -1,15 +1,15 @@
-export { getRedisConnection, closeRedisConnection } from './connection.js';
+export { closeRedisConnection, getRedisConnection } from "./connection.js";
 export {
-  KB_SYNC_QUEUE,
-  getSyncQueue,
   closeSyncQueue,
+  getSyncQueue,
+  KB_SYNC_QUEUE,
   type KBSyncJobData,
   type KBSyncResult,
-} from './queue.js';
+} from "./queue.js";
+export { scheduleKBSyncJobs, unscheduleKBSyncJob } from "./scheduler.js";
 export {
   getLastCommitSha,
-  setLastCommitSha,
   getLastSyncTime,
-} from './syncState.js';
-export { startSyncWorker } from './worker.js';
-export { scheduleKBSyncJobs, unscheduleKBSyncJob } from './scheduler.js';
+  setLastCommitSha,
+} from "./syncState.js";
+export { startSyncWorker } from "./worker.js";

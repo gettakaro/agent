@@ -5,12 +5,17 @@
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "npm run build && (tsc --watch & node --watch dist/main.js)",
+    "dev": "tsx watch src/main.ts",
     "build": "tsc && cp -r src/views dist/ && cp -r src/public dist/",
     "start": "node dist/main.js",
-    "db:migrate": "tsc && node dist/db/migrate.js",
-    "db:rollback": "tsc && node dist/db/rollback.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:migrate:prod": "node dist/db/migrate.js",
+    "db:rollback": "tsx src/db/rollback.ts"
   },
   "dependencies": {
     "@takaro/apiclient": "^0.4.10",
@@ -29,12 +34,14 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.9",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^22.10.2",
     "@types/uuid": "^10.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2"
   }
 }

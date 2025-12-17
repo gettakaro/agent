@@ -1,8 +1,8 @@
-import type { AgentVersionConfig } from '../types.js';
-import { SYSTEM_PROMPT_V1 } from './prompts/v1.js';
-import { SYSTEM_PROMPT_CONCISE } from './prompts/concise.js';
-import { moduleWriterTools } from './tools/index.js';
-import { knowledgeRegistry } from '../../knowledge/index.js';
+import { knowledgeRegistry } from "../../knowledge/index.js";
+import type { AgentVersionConfig } from "../types.js";
+import { SYSTEM_PROMPT_CONCISE } from "./prompts/concise.js";
+import { SYSTEM_PROMPT_V1 } from "./prompts/v1.js";
+import { moduleWriterTools } from "./tools/index.js";
 
 /**
  * Module writer experiments.
@@ -19,22 +19,22 @@ import { knowledgeRegistry } from '../../knowledge/index.js';
 
 // Base experiments without KB tools
 const BASE_EXPERIMENTS: Record<string, AgentVersionConfig> = {
-  'grok-fast': {
-    model: 'x-ai/grok-code-fast-1',
+  "grok-fast": {
+    model: "x-ai/grok-code-fast-1",
     systemPrompt: SYSTEM_PROMPT_V1,
     tools: moduleWriterTools,
     temperature: 0.7,
     maxTokens: 8192,
   },
-  'gpt-oss': {
-    model: 'openai/gpt-4.1-nano',
+  "gpt-oss": {
+    model: "openai/gpt-4.1-nano",
     systemPrompt: SYSTEM_PROMPT_V1,
     tools: moduleWriterTools,
     temperature: 0.7,
     maxTokens: 8192,
   },
-  'concise': {
-    model: 'x-ai/grok-code-fast-1',
+  concise: {
+    model: "x-ai/grok-code-fast-1",
     systemPrompt: SYSTEM_PROMPT_CONCISE,
     tools: moduleWriterTools,
     temperature: 0.5,
@@ -43,30 +43,26 @@ const BASE_EXPERIMENTS: Record<string, AgentVersionConfig> = {
 };
 
 // Experiments that require KB tools (resolved at runtime)
-const KB_ENHANCED_EXPERIMENTS = ['with-docs'] as const;
+const KB_ENHANCED_EXPERIMENTS = ["with-docs"] as const;
 
 /**
  * Get experiment config, resolving KB tools at runtime.
  */
-export function getExperimentConfig(
-  experiment: string
-): AgentVersionConfig | undefined {
+export function getExperimentConfig(experiment: string): AgentVersionConfig | undefined {
   // Check base experiments first
   if (experiment in BASE_EXPERIMENTS) {
     return BASE_EXPERIMENTS[experiment];
   }
 
   // Handle KB-enhanced experiments
-  if (experiment === 'with-docs') {
-    const kb = knowledgeRegistry.create('takaro-docs');
+  if (experiment === "with-docs") {
+    const kb = knowledgeRegistry.create("takaro-docs");
     if (!kb) {
-      console.warn(
-        'takaro-docs KB not registered, falling back to grok-fast without docs'
-      );
-      return BASE_EXPERIMENTS['grok-fast'];
+      console.warn("takaro-docs KB not registered, falling back to grok-fast without docs");
+      return BASE_EXPERIMENTS["grok-fast"];
     }
     return {
-      model: 'x-ai/grok-code-fast-1',
+      model: "x-ai/grok-code-fast-1",
       systemPrompt: SYSTEM_PROMPT_V1,
       tools: [...moduleWriterTools, kb.searchTool],
       temperature: 0.7,
@@ -87,7 +83,7 @@ export function listExperiments(): string[] {
 // Legacy export for backwards compatibility
 export const MODULE_WRITER_EXPERIMENTS = BASE_EXPERIMENTS;
 
-export const DEFAULT_EXPERIMENT = 'grok-fast';
+export const DEFAULT_EXPERIMENT = "grok-fast";
 
 // Keep legacy exports for backwards compatibility during migration
 export const MODULE_WRITER_VERSIONS = MODULE_WRITER_EXPERIMENTS;

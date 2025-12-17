@@ -1,39 +1,38 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const searchBans: ToolDefinition = {
-  name: 'searchBans',
-  description:
-    'Search for existing bans. Can filter by player, game server, or global status.',
+  name: "searchBans",
+  description: "Search for existing bans. Can filter by player, game server, or global status.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       playerId: {
-        type: 'string',
-        description: 'Filter by player ID',
+        type: "string",
+        description: "Filter by player ID",
       },
       gameServerId: {
-        type: 'string',
-        description: 'Filter by game server ID',
+        type: "string",
+        description: "Filter by game server ID",
       },
       isGlobal: {
-        type: 'boolean',
-        description: 'Filter by global ban status',
+        type: "boolean",
+        description: "Filter by global ban status",
       },
       limit: {
-        type: 'number',
-        description: 'Maximum number of results (default: 20)',
+        type: "number",
+        description: "Maximum number of results (default: 20)",
       },
     },
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const searchParams: Record<string, unknown> = {
       limit: (args.limit as number) || 20,
-      extend: ['player', 'gameServer'],
+      extend: ["player", "gameServer"],
     };
 
     const filters: Record<string, unknown> = {};

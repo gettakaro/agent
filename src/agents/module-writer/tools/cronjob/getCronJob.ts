@@ -1,22 +1,22 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const getCronJob: ToolDefinition = {
-  name: 'getCronJob',
-  description: 'Get details of a specific cron job by ID.',
+  name: "getCronJob",
+  description: "Get details of a specific cron job by ID.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       id: {
-        type: 'string',
-        description: 'The cron job ID to retrieve',
+        type: "string",
+        description: "The cron job ID to retrieve",
       },
     },
-    required: ['id'],
+    required: ["id"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const id = args.id as string;

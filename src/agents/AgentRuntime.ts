@@ -1,15 +1,15 @@
+import { OpenRouterProvider } from "./providers/OpenRouterProvider.js";
+import type { ILLMProvider } from "./providers/types.js";
 import type {
-  IAgent,
+  AgentResponse,
   AgentVersionConfig,
+  IAgent,
   Message,
   StreamChunk,
-  AgentResponse,
   ToolContext,
-  ToolResult,
   ToolExecution,
-} from './types.js';
-import type { ILLMProvider } from './providers/types.js';
-import { OpenRouterProvider } from './providers/OpenRouterProvider.js';
+  ToolResult,
+} from "./types.js";
 
 export class AgentRuntime implements IAgent {
   readonly id: string;
@@ -26,13 +26,13 @@ export class AgentRuntime implements IAgent {
     if (context.openrouterApiKey) {
       return new OpenRouterProvider(context.openrouterApiKey);
     }
-    throw new Error('No OpenRouter API key available. Please configure your API key in settings.');
+    throw new Error("No OpenRouter API key available. Please configure your API key in settings.");
   }
 
   async chat(
     messages: Message[],
     context: ToolContext,
-    onChunk?: (chunk: StreamChunk) => void
+    onChunk?: (chunk: StreamChunk) => void,
   ): Promise<AgentResponse> {
     const startTime = Date.now();
     const conversationMessages = [...messages];
@@ -59,7 +59,7 @@ export class AgentRuntime implements IAgent {
           temperature: this.config.temperature,
           maxTokens: this.config.maxTokens,
         },
-        onChunk
+        onChunk,
       );
 
       totalInputTokens += response.usage.inputTokens;
@@ -68,12 +68,12 @@ export class AgentRuntime implements IAgent {
       // If there are tool calls, execute them
       if (response.toolCalls.length > 0) {
         // Build assistant message with tool use
-        const assistantContent = response.content || '';
+        const assistantContent = response.content || "";
 
         // Add assistant message to conversation
         if (assistantContent) {
           conversationMessages.push({
-            role: 'assistant',
+            role: "assistant",
             content: assistantContent,
           });
         }
@@ -120,7 +120,7 @@ export class AgentRuntime implements IAgent {
           // Emit tool result with timing
           if (onChunk) {
             onChunk({
-              type: 'tool_result',
+              type: "tool_result",
               id: toolCall.id,
               name: toolCall.name,
               result,
@@ -130,7 +130,7 @@ export class AgentRuntime implements IAgent {
 
           // Add tool result to conversation (as user message with special format)
           conversationMessages.push({
-            role: 'user',
+            role: "user",
             content: `Tool result for ${toolCall.name} (id: ${toolCall.id}):\n${JSON.stringify(result, null, 2)}`,
           });
         }
@@ -138,15 +138,15 @@ export class AgentRuntime implements IAgent {
         // Store tool executions on a response message if there's content
         if (assistantContent) {
           responseMessages.push({
-            role: 'assistant',
+            role: "assistant",
             content: assistantContent,
             toolExecutions,
           });
         } else if (toolExecutions.length > 0) {
           // Even without text content, track tool usage
           responseMessages.push({
-            role: 'assistant',
-            content: '',
+            role: "assistant",
+            content: "",
             toolExecutions,
           });
         }
@@ -159,7 +159,7 @@ export class AgentRuntime implements IAgent {
 
         if (response.content) {
           responseMessages.push({
-            role: 'assistant',
+            role: "assistant",
             content: response.content,
           });
         }
@@ -171,7 +171,7 @@ export class AgentRuntime implements IAgent {
     // Emit done event
     if (onChunk) {
       onChunk({
-        type: 'done',
+        type: "done",
         usage: {
           inputTokens: totalInputTokens,
           outputTokens: totalOutputTokens,

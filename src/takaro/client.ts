@@ -1,12 +1,12 @@
-import { Client } from '@takaro/apiclient';
-import { config } from '../config.js';
-import { formatError } from '../utils/formatError.js';
+import { Client } from "@takaro/apiclient";
+import { config } from "../config.js";
+import { formatError } from "../utils/formatError.js";
 
 let serviceClient: Client | null = null;
 
 export async function initServiceClient(): Promise<void> {
   if (!config.takaroUsername || !config.takaroPassword) {
-    console.log('No Takaro credentials configured, using cookie-based auth');
+    console.log("No Takaro credentials configured, using cookie-based auth");
     return;
   }
 
@@ -20,10 +20,10 @@ export async function initServiceClient(): Promise<void> {
 
   try {
     await serviceClient.login();
-    console.log('Logged into Takaro API as service account');
+    console.log("Logged into Takaro API as service account");
   } catch (err) {
-    console.error('Takaro login failed:', formatError(err));
-    throw new Error('Failed to authenticate with Takaro API');
+    console.error("Takaro login failed:", formatError(err));
+    throw new Error("Failed to authenticate with Takaro API");
   }
 }
 
@@ -40,6 +40,6 @@ export function createUserClient(cookieHeader: string): Client {
     url: config.takaroApiUrl,
     auth: {},
   });
-  client.setHeader('Cookie', cookieHeader);
+  client.setHeader("Cookie", cookieHeader);
   return client;
 }

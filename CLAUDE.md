@@ -5,16 +5,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Development
-npm run dev          # Build + watch mode (tsc --watch & node --watch)
-npm run build        # TypeScript compile + copy views/public to dist/
-npm run start        # Run compiled app
-npm run typecheck    # Type check without emitting
+# Development (Docker - recommended)
+cp .env.example .env           # Create .env file (first time only)
+docker compose up              # Start app + PostgreSQL + Redis with hot-reload
+docker compose exec app npm run db:migrate  # Run migrations
 
-# Database & Redis
-docker compose up -d           # Start PostgreSQL (port 5433) and Redis (port 6379)
+# Development (local Node.js)
+docker compose up -d postgres redis  # Start only PostgreSQL and Redis
+npm install                    # Install dependencies
+npm run dev                    # Start with tsx watch mode
 npm run db:migrate             # Run migrations
-npm run db:rollback            # Rollback last migration
+
+# Build & Production
+npm run build                  # TypeScript compile + copy views/public to dist/
+npm run start                  # Run compiled app
+npm run typecheck              # Type check without emitting
+
+# Linting
+npm run lint                   # Check with Biome
+npm run lint:fix               # Auto-fix lint issues
+
+# Production Docker image
+docker build -t takaro-agent . # Build production image (uses Dockerfile)
 ```
 
 ## Architecture

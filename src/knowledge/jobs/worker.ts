@@ -1,21 +1,12 @@
-import { Worker } from 'bullmq';
-import { getRedisConnection } from './connection.js';
-import { getLastCommitSha, setLastCommitSha } from './syncState.js';
-import {
-  getLatestCommitSha,
-  getChangedFiles,
-  parseGitHubUrl,
-  fetchFileContent,
-} from '../ingest/github.js';
-import { chunkText } from '../ingest/chunker.js';
-import { ingestFromGitHub } from '../ingest/index.js';
-import { upsertDocuments, deleteBySourceFile } from '../vectorStore.js';
-import type { Document } from '../types.js';
-import {
-  KB_SYNC_QUEUE,
-  type KBSyncJobData,
-  type KBSyncResult,
-} from './queue.js';
+import { Worker } from "bullmq";
+import { chunkText } from "../ingest/chunker.js";
+import { fetchFileContent, getChangedFiles, getLatestCommitSha, parseGitHubUrl } from "../ingest/github.js";
+import { ingestFromGitHub } from "../ingest/index.js";
+import type { Document } from "../types.js";
+import { deleteBySourceFile, upsertDocuments } from "../vectorStore.js";
+import { getRedisConnection } from "./connection.js";
+import { KB_SYNC_QUEUE, type KBSyncJobData, type KBSyncResult } from "./queue.js";
+import { getLastCommitSha, setLastCommitSha } from "./syncState.js";
 
 /**
  * Start the KB sync worker.
@@ -29,7 +20,7 @@ export function startSyncWorker(): Worker<KBSyncJobData, KBSyncResult> {
         knowledgeBaseId,
         version,
         source,
-        extensions = ['.md', '.txt'],
+        extensions = [".md", ".txt"],
         chunkSize = 1000,
         chunkOverlap = 200,
       } = job.data;
@@ -54,7 +45,7 @@ export function startSyncWorker(): Worker<KBSyncJobData, KBSyncResult> {
         await setLastCommitSha(knowledgeBaseId, latestSha);
 
         return {
-          type: 'full',
+          type: "full",
           sha: latestSha,
           chunksCreated: result.chunksCreated,
         };
@@ -63,7 +54,7 @@ export function startSyncWorker(): Worker<KBSyncJobData, KBSyncResult> {
       // No changes - skip
       if (lastSha === latestSha) {
         return {
-          type: 'skipped',
+          type: "skipped",
           sha: latestSha,
         };
       }
@@ -113,7 +104,7 @@ export function startSyncWorker(): Worker<KBSyncJobData, KBSyncResult> {
       await setLastCommitSha(knowledgeBaseId, latestSha);
 
       return {
-        type: 'incremental',
+        type: "incremental",
         sha: latestSha,
         added: addedFiles.length,
         modified: modifiedFiles.length,
@@ -124,7 +115,7 @@ export function startSyncWorker(): Worker<KBSyncJobData, KBSyncResult> {
     {
       connection: getRedisConnection(),
       concurrency: 1, // Process one KB at a time to avoid rate limits
-    }
+    },
   );
 
   return worker;

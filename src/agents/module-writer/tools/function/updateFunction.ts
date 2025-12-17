@@ -1,34 +1,34 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const updateFunction: ToolDefinition = {
-  name: 'updateFunction',
-  description: 'Update an existing shared function. You can update the name, description, or code.',
+  name: "updateFunction",
+  description: "Update an existing shared function. You can update the name, description, or code.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       id: {
-        type: 'string',
-        description: 'The function ID to update',
+        type: "string",
+        description: "The function ID to update",
       },
       name: {
-        type: 'string',
-        description: 'New function name',
+        type: "string",
+        description: "New function name",
       },
       code: {
-        type: 'string',
-        description: 'New JavaScript code',
+        type: "string",
+        description: "New JavaScript code",
       },
       description: {
-        type: 'string',
-        description: 'New description',
+        type: "string",
+        description: "New description",
       },
     },
-    required: ['id'],
+    required: ["id"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const id = args.id as string;

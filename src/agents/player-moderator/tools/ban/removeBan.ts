@@ -1,23 +1,22 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const removeBan: ToolDefinition = {
-  name: 'removeBan',
-  description:
-    'Remove a ban (unban a player). Requires the ban ID, which can be found using searchBans.',
+  name: "removeBan",
+  description: "Remove a ban (unban a player). Requires the ban ID, which can be found using searchBans.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       banId: {
-        type: 'string',
-        description: 'The ban ID to remove',
+        type: "string",
+        description: "The ban ID to remove",
       },
     },
-    required: ['banId'],
+    required: ["banId"],
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const banId = args.banId as string;
@@ -28,7 +27,7 @@ export const removeBan: ToolDefinition = {
       success: true,
       output: {
         banId,
-        message: 'Ban removed successfully. Player can now rejoin.',
+        message: "Ban removed successfully. Player can now rejoin.",
       },
     };
   },

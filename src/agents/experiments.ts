@@ -40,13 +40,13 @@ const SEMVER_REGEX = /^\d+\.\d+\.\d+$/;
  * // → { base: 'module-writer' }
  */
 export function parseAgentId(agentId: string): ParsedAgentId {
-  if (agentId.includes('@')) {
-    const parts = agentId.split('@', 2);
+  if (agentId.includes("@")) {
+    const parts = agentId.split("@", 2);
     return { base: parts[0]!, version: parts[1] };
   }
 
-  if (agentId.includes('/')) {
-    const parts = agentId.split('/', 2);
+  if (agentId.includes("/")) {
+    const parts = agentId.split("/", 2);
     return { base: parts[0]!, experiment: parts[1] };
   }
 
@@ -56,30 +56,24 @@ export function parseAgentId(agentId: string): ParsedAgentId {
 /**
  * Format components into compound agent ID.
  */
-export function formatAgentId(
-  base: string,
-  experimentOrVersion?: string,
-  isVersion = false
-): string {
+export function formatAgentId(base: string, experimentOrVersion?: string, isVersion = false): string {
   if (!experimentOrVersion) return base;
-  return isVersion
-    ? `${base}@${experimentOrVersion}`
-    : `${base}/${experimentOrVersion}`;
+  return isVersion ? `${base}@${experimentOrVersion}` : `${base}/${experimentOrVersion}`;
 }
 
 /**
  * Check if agent ID is an experiment (has / separator).
  */
 export function isExperiment(agentId: string): boolean {
-  return agentId.includes('/');
+  return agentId.includes("/");
 }
 
 /**
  * Check if agent ID is a stable version (has @semver).
  */
 export function isStable(agentId: string): boolean {
-  if (!agentId.includes('@')) return false;
-  const version = agentId.split('@')[1] ?? '';
+  if (!agentId.includes("@")) return false;
+  const version = agentId.split("@")[1] ?? "";
   return SEMVER_REGEX.test(version);
 }
 
@@ -94,8 +88,8 @@ export function isStable(agentId: string): boolean {
  * // → { name: 'createModule' }
  */
 export function parseToolVariant(toolId: string): ParsedToolId {
-  if (toolId.includes('/')) {
-    const parts = toolId.split('/', 2);
+  if (toolId.includes("/")) {
+    const parts = toolId.split("/", 2);
     return { name: parts[0]!, variant: parts[1] };
   }
   return { name: toolId };

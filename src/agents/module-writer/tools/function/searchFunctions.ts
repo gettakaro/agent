@@ -1,33 +1,33 @@
-import type { ToolDefinition, ToolResult, ToolContext } from '../../../types.js';
+import type { ToolContext, ToolDefinition, ToolResult } from "../../../types.js";
 
 export const searchFunctions: ToolDefinition = {
-  name: 'searchFunctions',
-  description: 'Search for shared functions. Can filter by moduleId, versionId, or name.',
+  name: "searchFunctions",
+  description: "Search for shared functions. Can filter by moduleId, versionId, or name.",
   parameters: {
-    type: 'object',
+    type: "object",
     properties: {
       moduleId: {
-        type: 'string',
-        description: 'Filter by module ID',
+        type: "string",
+        description: "Filter by module ID",
       },
       versionId: {
-        type: 'string',
-        description: 'Filter by version ID',
+        type: "string",
+        description: "Filter by version ID",
       },
       name: {
-        type: 'string',
-        description: 'Filter by function name',
+        type: "string",
+        description: "Filter by function name",
       },
       limit: {
-        type: 'number',
-        description: 'Maximum number of results (default: 100)',
+        type: "number",
+        description: "Maximum number of results (default: 100)",
       },
     },
     additionalProperties: false,
   },
   execute: async (args, context: ToolContext): Promise<ToolResult> => {
     if (!context.takaroClient) {
-      return { success: false, output: null, error: 'No Takaro client available' };
+      return { success: false, output: null, error: "No Takaro client available" };
     }
 
     const searchParams: Record<string, unknown> = {};

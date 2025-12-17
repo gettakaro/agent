@@ -11,13 +11,13 @@ export function formatError(err: unknown): string {
   // Axios error with response (server returned error status)
   if (e.response) {
     const { status, statusText, data } = e.response;
-    const body = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-    return `HTTP ${status} ${statusText || ''}: ${body}`;
+    const body = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+    return `HTTP ${status} ${statusText || ""}: ${body}`;
   }
 
   // Axios error without response (network error, timeout)
   if (e.request) {
-    return `Network error: ${e.message || 'Request failed'}${e.code ? ` (${e.code})` : ''}`;
+    return `Network error: ${e.message || "Request failed"}${e.code ? ` (${e.code})` : ""}`;
   }
 
   // Regular Error or unknown

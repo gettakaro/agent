@@ -1,15 +1,10 @@
-import {
-  parseGitHubUrl,
-  fetchGitHubDirectory,
-  listGitHubFiles,
-  fetchFileContent,
-} from './github.js';
-import { chunkText, chunkFiles, type ChunkOptions } from './chunker.js';
-import { upsertDocuments, deleteByKnowledgeBase } from '../vectorStore.js';
-import type { IngestResult, Document } from '../types.js';
+import type { Document, IngestResult } from "../types.js";
+import { deleteByKnowledgeBase, upsertDocuments } from "../vectorStore.js";
+import { type ChunkOptions, chunkText } from "./chunker.js";
+import { fetchFileContent, listGitHubFiles, parseGitHubUrl } from "./github.js";
 
-export { parseGitHubUrl, fetchGitHubDirectory, listGitHubFiles, fetchFileContent } from './github.js';
-export { chunkText, chunkFiles, type Chunk, type ChunkOptions } from './chunker.js';
+export { type Chunk, type ChunkOptions, chunkFiles, chunkText } from "./chunker.js";
+export { fetchFileContent, fetchGitHubDirectory, listGitHubFiles, parseGitHubUrl } from "./github.js";
 
 export interface IngestFromGitHubOptions extends ChunkOptions {
   /** File extensions to include (default: ['.md', '.txt']) */
@@ -33,14 +28,9 @@ export async function ingestFromGitHub(
   knowledgeBaseId: string,
   version: string,
   githubUrl: string,
-  options: IngestFromGitHubOptions = {}
+  options: IngestFromGitHubOptions = {},
 ): Promise<IngestResult> {
-  const {
-    extensions = ['.md', '.txt'],
-    replaceExisting = true,
-    chunkSize,
-    overlap,
-  } = options;
+  const { extensions = [".md", ".txt"], replaceExisting = true, chunkSize, overlap } = options;
 
   // Parse the GitHub URL
   const parsed = parseGitHubUrl(githubUrl);
@@ -66,12 +56,7 @@ export async function ingestFromGitHub(
   // Process files one at a time to avoid OOM
   for (const filePath of filePaths) {
     // Fetch single file content
-    const content = await fetchFileContent(
-      parsed.owner,
-      parsed.repo,
-      parsed.branch,
-      filePath
-    );
+    const content = await fetchFileContent(parsed.owner, parsed.repo, parsed.branch, filePath);
 
     // Chunk single file
     const chunks = chunkText(content, filePath, { chunkSize, overlap });
