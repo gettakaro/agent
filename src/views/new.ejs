@@ -3,6 +3,8 @@
 <div class="page">
   <h1>New Conversation</h1>
 
+  <div id="errorMessage" class="alert alert-error" style="display: none;"></div>
+
   <form class="form" id="newConversationForm">
     <div class="form-group">
       <label for="agentId">Select Agent</label>
@@ -25,29 +27,50 @@
     </div>
 
     <div class="form-actions">
-      <a href="/conversations" class="btn btn-secondary">Cancel</a>
+      <a href="/" class="btn btn-secondary">Cancel</a>
       <button type="submit" class="btn btn-primary">Create Conversation</button>
     </div>
   </form>
 </div>
 
 <script>
+  function showError(message) {
+    const el = document.getElementById('errorMessage');
+    el.textContent = message;
+    el.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('errorMessage').style.display = 'none';
+  }
+
   document.getElementById('newConversationForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    hideError();
+
     const formData = new FormData(e.target);
+    const initialMessage = formData.get('initialMessage')?.trim();
 
     const response = await fetch('/api/conversations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        agentId: formData.get('agentId'),
-        initialMessage: formData.get('initialMessage') || undefined
+        agentId: formData.get('agentId')
       })
     });
 
     const data = await response.json();
-    if (data.data && data.data.id) {
-      window.location.href = '/conversations/' + data.data.id;
+
+    if (!response.ok) {
+      showError(data.error || 'Failed to create conversation');
+      return;
+    }
+
+    if (data.data?.id) {
+      if (initialMessage) {
+        sessionStorage.setItem('pendingMessage_' + data.data.id, initialMessage);
+      }
+      window.location.href = '/?id=' + data.data.id;
     }
   });
 </script>

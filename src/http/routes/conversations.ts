@@ -51,7 +51,7 @@ async function buildContext(
 // Create conversation
 router.post("/", async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { agentId, agentVersion, initialMessage } = req.body;
+    const { agentId, agentVersion } = req.body;
 
     if (!agentId) {
       res.status(400).json({ error: "agentId is required" });
@@ -90,56 +90,6 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
       userId: req.user!.id,
       provider: "openrouter",
     });
-
-    // If initial message provided, process it
-    if (initialMessage) {
-      await conversationService.addMessage(conversation.id, {
-        role: "user",
-        content: initialMessage,
-      });
-
-      // Process with agent (non-streaming for initial message)
-      const agent = factory.createAgent(experimentOrVersion);
-      const messages = await conversationService.getMessages(conversation.id);
-      const context = await buildContext(
-        req,
-        conversation.id,
-        factory.agentId,
-        experimentOrVersion,
-        conversation.state || {},
-      );
-
-      const response = await agent.chat(messages, context);
-
-      // Store assistant response
-      for (const msg of response.messages) {
-        await conversationService.addMessage(conversation.id, msg, {
-          tokenCount: msg.role === "assistant" ? response.usage.outputTokens : response.usage.inputTokens,
-          latencyMs: response.latencyMs,
-        });
-      }
-
-      // Update conversation state
-      await conversationService.updateState(conversation.id, context.state);
-
-      // Generate title for first exchange (fire and forget)
-      if (context.openrouterApiKey) {
-        const assistantMsg = response.messages.find((m) => m.role === "assistant")?.content || "";
-
-        generateTitle(initialMessage, assistantMsg, context.openrouterApiKey)
-          .then((title) => conversationService.updateTitle(conversation.id, title))
-          .catch((err) => console.error("Title generation failed:", formatError(err)));
-      }
-
-      const updatedConversation = await conversationService.get(conversation.id);
-      const allMessages = await conversationService.getMessages(conversation.id);
-
-      res.json({
-        data: updatedConversation,
-        messages: allMessages,
-      });
-      return;
-    }
 
     res.json({ data: conversation });
   } catch (error) {
