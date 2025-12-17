@@ -213,6 +213,16 @@
     });
 
     const data = await response.json();
+
+    if (!response.ok) {
+      if (data.code === 'NO_CREDENTIALS') {
+        window.location.href = '/settings';
+      } else {
+        alert(data.error || 'Failed to create conversation');
+      }
+      return;
+    }
+
     if (data.data?.id) {
       addConversationToSidebar(data.data);
       selectConversation(data.data.id);

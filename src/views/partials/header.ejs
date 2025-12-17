@@ -28,4 +28,11 @@
     </ul>
   </nav>
 
+  <% if (typeof hasOpenRouter !== 'undefined' && !hasOpenRouter) { %>
+    <div class="setup-banner">
+      <span>Configure your OpenRouter API key to start chatting</span>
+      <a href="/settings" class="btn btn-primary btn-small">Setup API Key</a>
+    </div>
+  <% } %>
+
   <main class="container">

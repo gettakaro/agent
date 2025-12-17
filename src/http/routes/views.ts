@@ -143,6 +143,7 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
   const conversations = await conversationService.listByUserId(req.user!.id);
   const experiments = getExperimentInfo();
   const selectedId = req.query.id as string | undefined;
+  const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
 
   let selectedConversation = null;
   let messages: Awaited<ReturnType<typeof conversationService.getMessages>> = [];
@@ -163,6 +164,7 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
     selectedConversation,
     messages,
     user: req.user,
+    hasOpenRouter,
   });
 });
 
@@ -171,6 +173,7 @@ router.get("/agents", async (req: AuthenticatedRequest, res: Response) => {
   const experiments = getEnhancedExperimentInfo();
   const groupedAgents = groupAgentsByType(experiments);
   const selectedId = req.query.id as string | undefined;
+  const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
 
   // Find selected agent
   const selectedAgent = selectedId ? experiments.find((e) => e.id === selectedId) : null;
@@ -193,6 +196,7 @@ router.get("/agents", async (req: AuthenticatedRequest, res: Response) => {
     selectedAgent,
     recentConversations,
     user: req.user,
+    hasOpenRouter,
   });
 });
 
@@ -209,11 +213,13 @@ router.get("/conversations", async (_req: AuthenticatedRequest, res: Response) =
 // New conversation form
 router.get("/new", async (req: AuthenticatedRequest, res: Response) => {
   const experiments = getExperimentInfo();
+  const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
 
   res.render("new", {
     title: "New Conversation",
     experiments,
     user: req.user,
+    hasOpenRouter,
   });
 });
 
@@ -227,12 +233,14 @@ router.get("/settings", async (req: AuthenticatedRequest, res: Response) => {
       openrouter: { connected: hasOpenRouter },
     },
     user: req.user,
+    hasOpenRouter,
   });
 });
 
 // Knowledge bases page
 router.get("/knowledge", async (req: AuthenticatedRequest, res: Response) => {
   const kbIds = knowledgeRegistry.listKnowledgeBaseTypes();
+  const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
   const knowledgeBases: KnowledgeBaseInfo[] = (
     await Promise.all(
       kbIds.map(async (kbId) => {
@@ -280,6 +288,7 @@ router.get("/knowledge", async (req: AuthenticatedRequest, res: Response) => {
     selectedKb,
     agentUsage,
     user: req.user,
+    hasOpenRouter,
   });
 });
 

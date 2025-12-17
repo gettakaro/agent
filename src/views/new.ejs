@@ -62,6 +62,10 @@
     const data = await response.json();
 
     if (!response.ok) {
+      if (data.code === 'NO_CREDENTIALS') {
+        window.location.href = '/settings';
+        return;
+      }
       showError(data.error || 'Failed to create conversation');
       return;
     }
