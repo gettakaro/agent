@@ -4,6 +4,7 @@ import { agentRegistry } from "../../agents/registry.js";
 import type { StreamChunk, ToolContext } from "../../agents/types.js";
 import { ApiKeyService } from "../../auth/api-key.service.js";
 import { ConversationService } from "../../conversations/service.js";
+import { generateTitle } from "../../conversations/title-generator.js";
 import { formatError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 
@@ -120,6 +121,15 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
 
       // Update conversation state
       await conversationService.updateState(conversation.id, context.state);
+
+      // Generate title for first exchange (fire and forget)
+      if (context.openrouterApiKey) {
+        const assistantMsg = response.messages.find((m) => m.role === "assistant")?.content || "";
+
+        generateTitle(initialMessage, assistantMsg, context.openrouterApiKey)
+          .then((title) => conversationService.updateTitle(conversation.id, title))
+          .catch((err) => console.error("Title generation failed:", formatError(err)));
+      }
 
       const updatedConversation = await conversationService.get(conversation.id);
       const allMessages = await conversationService.getMessages(conversation.id);
@@ -284,6 +294,16 @@ router.post("/:id/messages", async (req: AuthenticatedRequest, res: Response) =>
 
     // Update conversation state
     await conversationService.updateState(conversationId, context.state);
+
+    // Generate title for first exchange (fire and forget)
+    if (!conversation.title && context.openrouterApiKey) {
+      const userMsg = messages.find((m) => m.role === "user")?.content || "";
+      const assistantMsg = response.messages.find((m) => m.role === "assistant")?.content || "";
+
+      generateTitle(userMsg, assistantMsg, context.openrouterApiKey)
+        .then((title) => conversationService.updateTitle(conversationId, title))
+        .catch((err) => console.error("Title generation failed:", formatError(err)));
+    }
 
     res.end();
   } catch (error) {

@@ -33,6 +33,10 @@ export class ConversationService {
     return this.repo.updateState(id, state);
   }
 
+  async updateTitle(id: string, title: string): Promise<void> {
+    return this.repo.updateTitle(id, title);
+  }
+
   async getMessages(conversationId: string): Promise<Message[]> {
     const records = await this.repo.getMessages(conversationId);
     return records.map((r) => ({

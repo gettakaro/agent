@@ -66,6 +66,11 @@ export class ConversationRepo {
       });
   }
 
+  async updateTitle(id: string, title: string): Promise<void> {
+    const db = getDb();
+    await db("conversations").where("id", id).update({ title, updated_at: new Date() });
+  }
+
   async getMessages(conversationId: string): Promise<MessageRecord[]> {
     const db = getDb();
     const rows = await db("messages").where("conversation_id", conversationId).orderBy("created_at", "asc");
