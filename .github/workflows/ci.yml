@@ -120,6 +120,9 @@ jobs:
             -e PORT=3100 \
             "ghcr.io/${{ github.repository }}:sha-${{ steps.short_sha.outputs.sha }}"
 
+      - name: Run database migrations
+        run: docker exec app npm run db:migrate:prod
+
       - name: Wait for health check
         timeout-minutes: 2
         run: |
