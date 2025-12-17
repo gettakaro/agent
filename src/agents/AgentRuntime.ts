@@ -1,3 +1,4 @@
+import { formatError } from "../utils/formatError.js";
 import { OpenRouterProvider } from "./providers/OpenRouterProvider.js";
 import type { ILLMProvider } from "./providers/types.js";
 import type {
@@ -100,7 +101,7 @@ export class AgentRuntime implements IAgent {
               result = {
                 success: false,
                 output: null,
-                error: err instanceof Error ? err.message : String(err),
+                error: formatError(err),
               };
             }
           }
