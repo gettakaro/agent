@@ -10,6 +10,18 @@
   }
 </style>
 
+<%
+// Helper to display friendly name for custom agents
+function getAgentDisplayName(agentId, agentVersion) {
+  if (agentId.startsWith('custom:')) {
+    const customId = agentId.replace('custom:', '');
+    const agent = customAgents.find(a => a.id === customId);
+    return agent ? agent.name : agentId;
+  }
+  return agentId + '/' + agentVersion;
+}
+%>
+
 <div class="chat-layout">
   <!-- Mobile sidebar toggle -->
   <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
@@ -26,9 +38,18 @@
     </div>
     <div class="new-conversation-form">
       <select id="agentSelect" class="form-control">
-        <% experiments.forEach(exp => { %>
-          <option value="<%= exp.id %>"><%= exp.id %></option>
-        <% }) %>
+        <optgroup label="Built-in Agents">
+          <% experiments.forEach(exp => { %>
+            <option value="<%= exp.id %>"><%= exp.id %></option>
+          <% }) %>
+        </optgroup>
+        <% if (customAgents && customAgents.length > 0) { %>
+        <optgroup label="Custom Agents">
+          <% customAgents.forEach(agent => { %>
+            <option value="custom:<%= agent.id %>"><%= agent.name %></option>
+          <% }) %>
+        </optgroup>
+        <% } %>
       </select>
       <button type="button" onclick="createConversation()" class="btn btn-primary btn-small">+ New</button>
     </div>
@@ -45,7 +66,7 @@
             onclick="selectConversation('<%= conv.id %>')"
           >
             <div class="conversation-info">
-              <span class="experiment-id"><%= conv.agentId %>/<%= conv.agentVersion %></span>
+              <span class="experiment-id"><%= getAgentDisplayName(conv.agentId, conv.agentVersion) %></span>
               <span class="conversation-title"><%= conv.title || 'Untitled conversation' %></span>
             </div>
             <span class="conversation-date text-muted"><%= new Date(conv.createdAt).toLocaleDateString() %></span>
@@ -67,7 +88,7 @@
           <div>
             <h1 id="chatTitle"><%= selectedConversation.title || 'Chat' %></h1>
             <div class="chat-meta">
-              <span class="experiment-id" id="chatAgentId"><%= selectedConversation.agentId %>/<%= selectedConversation.agentVersion %></span>
+              <span class="experiment-id" id="chatAgentId"><%= getAgentDisplayName(selectedConversation.agentId, selectedConversation.agentVersion) %></span>
               <span class="text-muted">&#8226;</span>
               <span class="text-muted" id="chatDate"><%= new Date(selectedConversation.createdAt).toLocaleString() %></span>
             </div>
@@ -153,6 +174,18 @@
 </div>
 
 <script>
+  // Map of custom agent IDs to names for display
+  const customAgentsMap = new Map(<%- JSON.stringify((customAgents || []).map(a => [a.id, a.name])) %>);
+
+  function getAgentDisplayName(agentId, agentVersion) {
+    if (agentId.startsWith('custom:')) {
+      const customId = agentId.replace('custom:', '');
+      const name = customAgentsMap.get(customId);
+      return name || agentId;
+    }
+    return agentId + '/' + agentVersion;
+  }
+
   // Configure marked.js for markdown rendering with syntax highlighting
   marked.setOptions({
     breaks: true,
@@ -243,7 +276,7 @@
     row.onclick = () => selectConversation(conv.id);
     row.innerHTML = `
       <div class="conversation-info">
-        <span class="experiment-id">${escapeHtml(conv.agentId)}/${escapeHtml(conv.agentVersion)}</span>
+        <span class="experiment-id">${escapeHtml(getAgentDisplayName(conv.agentId, conv.agentVersion))}</span>
         <span class="conversation-title">${escapeHtml(conv.title || 'Untitled conversation')}</span>
       </div>
       <span class="conversation-date text-muted">${new Date(conv.createdAt).toLocaleDateString()}</span>
@@ -342,7 +375,7 @@
           <div>
             <h1 id="chatTitle">${escapeHtml(conv.title || 'Chat')}</h1>
             <div class="chat-meta">
-              <span class="experiment-id" id="chatAgentId">${escapeHtml(conv.agentId)}/${escapeHtml(conv.agentVersion)}</span>
+              <span class="experiment-id" id="chatAgentId">${escapeHtml(getAgentDisplayName(conv.agentId, conv.agentVersion))}</span>
               <span class="text-muted">&#8226;</span>
               <span class="text-muted" id="chatDate">${new Date(conv.createdAt).toLocaleString()}</span>
             </div>

@@ -7,6 +7,7 @@ import { config } from "../config.js";
 import { formatError } from "../utils/formatError.js";
 import authRoutes from "./routes/auth.js";
 import { conversationRoutes } from "./routes/conversations.js";
+import { customAgentRoutes } from "./routes/custom-agents.js";
 import { knowledgeRoutes } from "./routes/knowledge.js";
 import { viewRoutes } from "./routes/views.js";
 
@@ -58,6 +59,7 @@ export function createApp(): Express {
   // API routes
   app.use("/auth", authRoutes);
   app.use("/api/conversations", conversationRoutes);
+  app.use("/api/custom-agents", customAgentRoutes);
   app.use("/api/knowledge-bases", knowledgeRoutes);
 
   // Error handler
