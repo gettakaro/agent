@@ -1,16 +1,18 @@
 import { type Response, Router } from "express";
 import { parseAgentId } from "../../agents/experiments.js";
 import { agentRegistry } from "../../agents/registry.js";
-import type { StreamChunk, ToolContext } from "../../agents/types.js";
+import type { IAgent, StreamChunk, ToolContext } from "../../agents/types.js";
 import { ApiKeyService } from "../../auth/api-key.service.js";
 import { ConversationService } from "../../conversations/service.js";
 import { generateTitle } from "../../conversations/title-generator.js";
+import { CustomAgentService, createAgentFromCustom } from "../../custom-agents/index.js";
 import { formatError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
 const conversationService = new ConversationService();
 const apiKeyService = new ApiKeyService();
+const customAgentService = new CustomAgentService();
 
 // Apply auth middleware to all API routes
 router.use(authMiddleware({ redirect: false }));
@@ -58,6 +60,37 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
       return;
     }
 
+    // Check user has OpenRouter configured
+    const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
+    if (!hasOpenRouter) {
+      res.status(400).json({
+        error: "No API credentials configured. Please add your OpenRouter key in settings.",
+        code: "NO_CREDENTIALS",
+      });
+      return;
+    }
+
+    // Check if this is a custom agent
+    if (agentId.startsWith("custom:")) {
+      const customId = agentId.replace("custom:", "");
+      const customAgent = await customAgentService.get(customId, req.user!.id);
+
+      if (!customAgent) {
+        res.status(400).json({ error: `Custom agent not found: ${customId}` });
+        return;
+      }
+
+      const conversation = await conversationService.create({
+        agentId: `custom:${customAgent.id}`,
+        agentVersion: "1",
+        userId: req.user!.id,
+        provider: "openrouter",
+      });
+
+      res.json({ data: conversation });
+      return;
+    }
+
     // Support compound IDs (module-writer/grok-fast) or separate agentId + agentVersion
     // If agentVersion provided separately, append it to agentId for resolution
     const fullAgentId = agentVersion ? `${agentId}/${agentVersion}` : agentId;
@@ -72,16 +105,6 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
     }
 
     const { factory, experimentOrVersion } = resolved;
-
-    // Check user has OpenRouter configured
-    const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
-    if (!hasOpenRouter) {
-      res.status(400).json({
-        error: "No API credentials configured. Please add your OpenRouter key in settings.",
-        code: "NO_CREDENTIALS",
-      });
-      return;
-    }
 
     // Store base agent ID and experiment/version separately
     const conversation = await conversationService.create({
@@ -197,10 +220,26 @@ router.post("/:id/messages", async (req: AuthenticatedRequest, res: Response) =>
       return;
     }
 
-    const factory = agentRegistry.getFactory(conversation.agentId);
-    if (!factory) {
-      res.status(500).json({ error: "Agent not found" });
-      return;
+    // Resolve agent - either built-in or custom
+    let agent: IAgent;
+
+    if (conversation.agentId.startsWith("custom:")) {
+      const customId = conversation.agentId.replace("custom:", "");
+      const customAgent = await customAgentService.get(customId, req.user!.id);
+
+      if (!customAgent) {
+        res.status(500).json({ error: "Custom agent not found" });
+        return;
+      }
+
+      agent = createAgentFromCustom(customAgent);
+    } else {
+      const factory = agentRegistry.getFactory(conversation.agentId);
+      if (!factory) {
+        res.status(500).json({ error: "Agent not found" });
+        return;
+      }
+      agent = factory.createAgent(conversation.agentVersion);
     }
 
     // Store user message
@@ -216,7 +255,6 @@ router.post("/:id/messages", async (req: AuthenticatedRequest, res: Response) =>
     sseStarted = true;
 
     // Process with agent
-    const agent = factory.createAgent(conversation.agentVersion);
     const messages = await conversationService.getMessages(conversationId);
     const context = await buildContext(
       req,

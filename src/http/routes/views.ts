@@ -1,8 +1,10 @@
 import { type Response, Router } from "express";
 import { parseAgentId } from "../../agents/experiments.js";
 import { agentRegistry } from "../../agents/registry.js";
+import { getAvailableTools } from "../../agents/tools/registry.js";
 import { ApiKeyService } from "../../auth/api-key.service.js";
 import { ConversationService } from "../../conversations/service.js";
+import { type CustomAgent, CustomAgentService } from "../../custom-agents/index.js";
 import { getDocumentCount, getLastCommitSha, getLastSyncTime, knowledgeRegistry } from "../../knowledge/index.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 
@@ -134,6 +136,16 @@ function groupAgentsByType(experiments: AgentExperimentInfo[]): GroupedAgents[] 
 const router = Router();
 const conversationService = new ConversationService();
 const apiKeyService = new ApiKeyService();
+const customAgentService = new CustomAgentService();
+
+// Available models for custom agents
+const availableModels = [
+  { id: "x-ai/grok-4.1-fast", name: "Grok 4.1 Fast", provider: "xAI" },
+  { id: "openai/gpt-4.1-nano", name: "GPT-4.1 Nano", provider: "OpenAI" },
+  { id: "anthropic/claude-sonnet-4", name: "Claude Sonnet 4", provider: "Anthropic" },
+  { id: "anthropic/claude-haiku-4.5", name: "Claude Haiku 4.5", provider: "Anthropic" },
+  { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google" },
+];
 
 // Apply auth middleware to all routes
 router.use(authMiddleware({ redirect: true }));
@@ -142,6 +154,7 @@ router.use(authMiddleware({ redirect: true }));
 router.get("/", async (req: AuthenticatedRequest, res: Response) => {
   const conversations = await conversationService.listByUserId(req.user!.id);
   const experiments = getExperimentInfo();
+  const customAgents = await customAgentService.listByUser(req.user!.id);
   const selectedId = req.query.id as string | undefined;
   const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
 
@@ -161,6 +174,7 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
     title: selectedConversation ? `Chat - ${selectedConversation.agentId}` : "Conversations",
     conversations,
     experiments,
+    customAgents,
     selectedConversation,
     messages,
     user: req.user,
@@ -168,33 +182,74 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
   });
 });
 
+// Helper to get available knowledge bases for custom agent editor
+function getAvailableKnowledgeBases() {
+  return knowledgeRegistry.listKnowledgeBaseTypes().map((id) => {
+    const factory = knowledgeRegistry.getFactory(id);
+    const kb = factory?.createKnowledgeBase(factory.getDefaultVersion());
+    return {
+      id,
+      name: kb?.name || id,
+      description: kb?.description || "",
+    };
+  });
+}
+
 // Agents list
 router.get("/agents", async (req: AuthenticatedRequest, res: Response) => {
   const experiments = getEnhancedExperimentInfo();
   const groupedAgents = groupAgentsByType(experiments);
+  const customAgents = await customAgentService.listByUser(req.user!.id);
+  const availableTools = getAvailableTools();
+  const availableKbs = getAvailableKnowledgeBases();
   const selectedId = req.query.id as string | undefined;
+  const tab = (req.query.tab as string) || "builtin";
+  const editMode = req.query.edit === "true";
   const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
 
-  // Find selected agent
-  const selectedAgent = selectedId ? experiments.find((e) => e.id === selectedId) : null;
-
-  // Fetch recent conversations for selected agent
+  // Find selected agent (built-in or custom)
+  let selectedAgent: AgentExperimentInfo | null = null;
+  let selectedCustomAgent: CustomAgent | null = null;
   let recentConversations: Awaited<ReturnType<typeof conversationService.listByAgent>> = [];
-  if (selectedAgent) {
-    recentConversations = await conversationService.listByAgent(
-      req.user!.id,
-      selectedAgent.type,
-      selectedAgent.experiment,
-      5,
-    );
+
+  if (selectedId) {
+    if (selectedId.startsWith("custom:")) {
+      const customId = selectedId.replace("custom:", "");
+      selectedCustomAgent = customAgents.find((a) => a.id === customId) || null;
+      if (selectedCustomAgent) {
+        recentConversations = await conversationService.listByAgent(
+          req.user!.id,
+          `custom:${selectedCustomAgent.id}`,
+          "1",
+          5,
+        );
+      }
+    } else {
+      selectedAgent = experiments.find((e) => e.id === selectedId) || null;
+      if (selectedAgent) {
+        recentConversations = await conversationService.listByAgent(
+          req.user!.id,
+          selectedAgent.type,
+          selectedAgent.experiment,
+          5,
+        );
+      }
+    }
   }
 
   res.render("agents", {
     title: "Agents",
     experiments,
     groupedAgents,
+    customAgents,
+    availableTools,
+    availableModels,
+    availableKbs,
     selectedAgent,
+    selectedCustomAgent,
     recentConversations,
+    tab,
+    editMode,
     user: req.user,
     hasOpenRouter,
   });

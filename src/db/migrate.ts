@@ -9,7 +9,7 @@ const db = knex({
   connection: process.env.DATABASE_URL,
   migrations: {
     directory: path.join(__dirname, "migrations"),
-    loadExtensions: [".js"],
+    loadExtensions: [".ts"],
   },
 });
 
