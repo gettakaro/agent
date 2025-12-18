@@ -88,15 +88,6 @@ a:hover {
   flex: 1;
 }
 
-/* Footer */
-.footer {
-  text-align: center;
-  padding: 1rem;
-  color: var(--text-muted);
-  border-top: 1px solid var(--border-color);
-  font-size: 0.875rem;
-}
-
 /* Buttons */
 .btn {
   display: inline-flex;
