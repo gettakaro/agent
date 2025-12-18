@@ -121,7 +121,7 @@ jobs:
             "ghcr.io/${{ github.repository }}:sha-${{ steps.short_sha.outputs.sha }}"
 
       - name: Run database migrations
-        run: docker exec app npm run db:migrate:prod
+        run: docker exec app node dist/db/migrate.js
 
       - name: Wait for health check
         timeout-minutes: 2
