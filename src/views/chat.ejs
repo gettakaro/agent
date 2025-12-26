@@ -69,7 +69,7 @@ function getAgentDisplayName(agentId, agentVersion) {
               <span class="experiment-id"><%= getAgentDisplayName(conv.agentId, conv.agentVersion) %></span>
               <span class="conversation-title"><%= conv.title || 'Untitled conversation' %></span>
             </div>
-            <span class="conversation-date text-muted"><%= new Date(conv.createdAt).toLocaleDateString() %></span>
+            <span class="conversation-date text-muted" data-date="<%= conv.createdAt.toISOString() %>"></span>
           </div>
         <% }) %>
       <% } %>
@@ -90,7 +90,11 @@ function getAgentDisplayName(agentId, agentVersion) {
             <div class="chat-meta">
               <span class="experiment-id" id="chatAgentId"><%= getAgentDisplayName(selectedConversation.agentId, selectedConversation.agentVersion) %></span>
               <span class="text-muted">&#8226;</span>
-              <span class="text-muted" id="chatDate"><%= new Date(selectedConversation.createdAt).toLocaleString() %></span>
+              <span class="text-muted" id="chatDate" data-date="<%= selectedConversation.createdAt.toISOString() %>"></span>
+              <% if (selectedConversation.agentId === 'module-writer') { %>
+                <span class="text-muted">&#8226;</span>
+                <a href="/cockpit/<%= selectedConversation.id %>" class="cockpit-link">Open in Cockpit</a>
+              <% } %>
             </div>
           </div>
         </div>
@@ -378,6 +382,10 @@ function getAgentDisplayName(agentId, agentVersion) {
               <span class="experiment-id" id="chatAgentId">${escapeHtml(getAgentDisplayName(conv.agentId, conv.agentVersion))}</span>
               <span class="text-muted">&#8226;</span>
               <span class="text-muted" id="chatDate">${new Date(conv.createdAt).toLocaleString()}</span>
+              ${conv.agentId === 'module-writer' ? `
+                <span class="text-muted">&#8226;</span>
+                <a href="/cockpit/${conv.id}" class="cockpit-link">Open in Cockpit</a>
+              ` : ''}
             </div>
           </div>
         </div>
@@ -575,6 +583,15 @@ function getAgentDisplayName(agentId, agentVersion) {
       }
     }
   }
+
+  // Format dates in user's timezone (server sends ISO strings)
+  document.querySelectorAll('[data-date]').forEach(el => {
+    const date = new Date(el.dataset.date);
+    // Use toLocaleDateString for sidebar, toLocaleString for chat header
+    el.textContent = el.classList.contains('conversation-date')
+      ? date.toLocaleDateString()
+      : date.toLocaleString();
+  });
 
   // Render markdown for server-rendered messages
   document.querySelectorAll('.message-content[data-raw]').forEach(el => {

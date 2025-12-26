@@ -3,6 +3,7 @@ import { parseAgentId } from "../../agents/experiments.js";
 import { agentRegistry } from "../../agents/registry.js";
 import type { IAgent, StreamChunk, ToolContext } from "../../agents/types.js";
 import { ApiKeyService } from "../../auth/api-key.service.js";
+import { CockpitSessionService } from "../../cockpit/index.js";
 import { ConversationService } from "../../conversations/service.js";
 import { generateTitle } from "../../conversations/title-generator.js";
 import { CustomAgentService, createAgentFromCustom } from "../../custom-agents/index.js";
@@ -13,6 +14,7 @@ const router = Router();
 const conversationService = new ConversationService();
 const apiKeyService = new ApiKeyService();
 const customAgentService = new CustomAgentService();
+const cockpitSessionService = new CockpitSessionService();
 
 // Apply auth middleware to all API routes
 router.use(authMiddleware({ redirect: false }));
@@ -37,6 +39,16 @@ async function buildContext(
   state: Record<string, unknown>,
 ): Promise<ToolContext> {
   const apiKey = await apiKeyService.getApiKey(req.user!.id, "openrouter");
+
+  // Check if conversation has a cockpit session with active mock server
+  const cockpitSession = await cockpitSessionService.getByConversation(conversationId);
+  if (cockpitSession?.mockServerGameServerId && cockpitSession.mockServerStatus === "running") {
+    // Inject mock server context for easy access by tools
+    state.mockServerGameServerId = cockpitSession.mockServerGameServerId;
+    if (cockpitSession.selectedPlayerId) {
+      state.selectedPlayerId = cockpitSession.selectedPlayerId;
+    }
+  }
 
   return {
     conversationId,

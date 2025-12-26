@@ -6,6 +6,7 @@ import express, { type Express, type NextFunction, type Request, type Response }
 import { config } from "../config.js";
 import { formatError } from "../utils/formatError.js";
 import authRoutes from "./routes/auth.js";
+import { cockpitRoutes } from "./routes/cockpit.js";
 import { conversationRoutes } from "./routes/conversations.js";
 import { customAgentRoutes } from "./routes/custom-agents.js";
 import { knowledgeRoutes } from "./routes/knowledge.js";
@@ -22,6 +23,16 @@ export function createApp(): Express {
 
   // Static files
   app.use("/public", express.static(path.join(__dirname, "../public")));
+
+  // Block source map requests from hitting dynamic routes
+  // (browsers request .map files relative to current URL, not /public)
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path.endsWith(".map")) {
+      res.status(404).send("Not found");
+      return;
+    }
+    next();
+  });
 
   // CORS configuration
   app.use(
@@ -61,6 +72,7 @@ export function createApp(): Express {
   app.use("/api/conversations", conversationRoutes);
   app.use("/api/custom-agents", customAgentRoutes);
   app.use("/api/knowledge-bases", knowledgeRoutes);
+  app.use("/api/cockpit", cockpitRoutes);
 
   // Error handler
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

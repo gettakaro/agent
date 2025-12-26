@@ -1903,3 +1903,373 @@ select.form-control {
     text-align: left;
   }
 }
+
+/* ===========================================
+   Module Writer Cockpit - Two Panel Layout
+   =========================================== */
+
+.cockpit-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  height: calc(100vh - 60px);
+  position: relative;
+}
+
+/* Chat Panel (Left) */
+.cockpit-chat {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.cockpit-chat .chat-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.cockpit-chat .chat-header h1 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.cockpit-chat .chat-meta {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cockpit-chat .chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.cockpit-chat .chat-input {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cockpit-chat .chat-input textarea {
+  flex: 1;
+  resize: none;
+}
+
+/* Side Panel (Right) */
+.cockpit-side-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+/* Mock Server Card */
+.mock-server-card {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mock-server-card h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.server-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator.running {
+  background: var(--accent-secondary);
+  box-shadow: 0 0 6px var(--accent-secondary);
+}
+
+.status-indicator.stopped {
+  background: var(--text-muted);
+}
+
+.status-indicator.starting,
+.status-indicator.stopping {
+  background: var(--accent-warning);
+  animation: pulse 1s infinite;
+}
+
+.status-indicator.error {
+  background: var(--accent-danger);
+}
+
+#statusText {
+  font-size: 0.875rem;
+  text-transform: capitalize;
+}
+
+.server-info {
+  margin-bottom: 0.75rem;
+}
+
+.server-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.server-controls .btn {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+}
+
+/* Player Picker */
+.player-picker {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.player-picker h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+}
+
+.player-picker .small {
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.player-item:hover {
+  border-color: var(--border-color);
+}
+
+.player-item.selected {
+  border-color: var(--accent-primary);
+  background: rgba(88, 166, 255, 0.1);
+}
+
+.player-item input[type="radio"] {
+  margin: 0;
+}
+
+.player-name {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.player-id {
+  font-size: 0.75rem;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+}
+
+/* Event Stream */
+.event-stream-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.event-stream-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.event-stream-header h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.event-stream-header select {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  width: auto;
+}
+
+.event-stream {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.event-stream .empty-state {
+  padding: 2rem;
+  text-align: center;
+}
+
+.event-stream .empty-state p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.event-item {
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.event-item.event-success {
+  border-left-color: var(--accent-secondary);
+}
+
+.event-item.event-error {
+  border-left-color: var(--accent-danger);
+}
+
+.event-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.event-icon {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+  width: 1rem;
+}
+
+.event-name {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  color: var(--text-primary);
+}
+
+.event-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.event-status {
+  font-size: 0.875rem;
+}
+
+.event-success .event-status {
+  color: var(--accent-secondary);
+}
+
+.event-error .event-status {
+  color: var(--accent-danger);
+}
+
+.event-summary {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  padding-left: 1.5rem;
+}
+
+.event-logs {
+  display: none;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.event-item.expanded .event-logs {
+  display: block;
+}
+
+.event-item.expanded .event-icon {
+  transform: rotate(90deg);
+}
+
+/* Loading state for player list */
+.loading-state {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Cockpit link in chat header */
+.cockpit-link {
+  color: var(--accent-primary);
+  font-size: 0.8125rem;
+}
+
+.cockpit-link:hover {
+  text-decoration: underline;
+}
+
+/* Mobile Responsive - Cockpit */
+@media (max-width: 1024px) {
+  .cockpit-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .cockpit-side-panel {
+    height: 300px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .cockpit-chat {
+    border-right: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .cockpit-side-panel {
+    height: 250px;
+  }
+
+  .server-controls {
+    flex-direction: column;
+  }
+
+  .server-controls .btn {
+    width: 100%;
+  }
+}

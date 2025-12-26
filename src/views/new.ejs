@@ -27,7 +27,7 @@
     </div>
 
     <div class="form-actions">
-      <a href="/" class="btn btn-secondary">Cancel</a>
+      <a href="/conversations" class="btn btn-secondary">Cancel</a>
       <button type="submit" class="btn btn-primary">Create Conversation</button>
     </div>
   </form>
@@ -74,7 +74,7 @@
       if (initialMessage) {
         sessionStorage.setItem('pendingMessage_' + data.data.id, initialMessage);
       }
-      window.location.href = '/?id=' + data.data.id;
+      window.location.href = '/conversations?id=' + data.data.id;
     }
   });
 </script>

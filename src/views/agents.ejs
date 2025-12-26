@@ -362,7 +362,7 @@
             <% } else { %>
               <div class="conversation-list-compact">
                 <% recentConversations.forEach(conv => { %>
-                  <a href="/?id=<%= conv.id %>" class="conversation-item-compact">
+                  <a href="/conversations?id=<%= conv.id %>" class="conversation-item-compact">
                     <span class="conversation-title"><%= conv.title || 'Untitled conversation' %></span>
                     <span class="conversation-date"><%= conv.updatedAt.toLocaleDateString() %></span>
                   </a>
@@ -478,7 +478,7 @@
             <% } else { %>
               <div class="conversation-list-compact">
                 <% recentConversations.forEach(conv => { %>
-                  <a href="/?id=<%= conv.id %>" class="conversation-item-compact">
+                  <a href="/conversations?id=<%= conv.id %>" class="conversation-item-compact">
                     <span class="conversation-title"><%= conv.title || 'Untitled conversation' %></span>
                     <span class="conversation-date"><%= conv.updatedAt.toLocaleDateString() %></span>
                   </a>
@@ -830,7 +830,7 @@
 
     const conversationsHtml = conversations.length > 0
       ? conversations.map(conv => `
-          <a href="/?id=${conv.id}" class="conversation-item-compact">
+          <a href="/conversations?id=${conv.id}" class="conversation-item-compact">
             <span class="conversation-title">${escapeHtml(conv.title || 'Untitled conversation')}</span>
             <span class="conversation-date">${new Date(conv.updatedAt).toLocaleDateString()}</span>
           </a>
@@ -941,7 +941,7 @@
 
     const conversationsHtml = conversations.length > 0
       ? conversations.map(conv => `
-          <a href="/?id=${conv.id}" class="conversation-item-compact">
+          <a href="/conversations?id=${conv.id}" class="conversation-item-compact">
             <span class="conversation-title">${escapeHtml(conv.title || 'Untitled conversation')}</span>
             <span class="conversation-date">${new Date(conv.updatedAt).toLocaleDateString()}</span>
           </a>
@@ -1262,7 +1262,7 @@
     .then(r => r.json())
     .then(data => {
       if (data.data?.id) {
-        window.location.href = '/?id=' + data.data.id;
+        window.location.href = '/conversations?id=' + data.data.id;
       } else {
         alert(data.error || 'Failed to start conversation');
       }

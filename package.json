@@ -17,7 +17,13 @@
     "db:rollback": "tsx src/db/rollback.ts"
   },
   "dependencies": {
-    "@takaro/apiclient": "^0.4.10",
+    "@takaro/apiclient": "next",
+    "@takaro/config": "next",
+    "@takaro/db": "next",
+    "@takaro/gameserver": "next",
+    "@takaro/mock-gameserver": "next",
+    "@takaro/modules": "next",
+    "@takaro/util": "next",
     "axios": "^1.13.2",
     "bullmq": "^5.66.0",
     "cookie-parser": "^1.4.7",
@@ -29,6 +35,7 @@
     "openai": "^4.77.0",
     "pg": "^8.13.1",
     "redis": "^5.10.0",
+    "socket.io-client": "^4.8.1",
     "uuid": "^11.0.3",
     "zod": "^3.24.1"
   },

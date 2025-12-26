@@ -3,6 +3,7 @@ import { parseAgentId } from "../../agents/experiments.js";
 import { agentRegistry } from "../../agents/registry.js";
 import { getAvailableTools } from "../../agents/tools/registry.js";
 import { ApiKeyService } from "../../auth/api-key.service.js";
+import { CockpitSessionService } from "../../cockpit/index.js";
 import { ConversationService } from "../../conversations/service.js";
 import { type CustomAgent, CustomAgentService } from "../../custom-agents/index.js";
 import { getDocumentCount, getLastCommitSha, getLastSyncTime, knowledgeRegistry } from "../../knowledge/index.js";
@@ -137,6 +138,7 @@ const router = Router();
 const conversationService = new ConversationService();
 const apiKeyService = new ApiKeyService();
 const customAgentService = new CustomAgentService();
+const cockpitSessionService = new CockpitSessionService();
 
 // Available models for custom agents
 const availableModels = [
@@ -150,36 +152,9 @@ const availableModels = [
 // Apply auth middleware to all routes
 router.use(authMiddleware({ redirect: true }));
 
-// Home - Conversations view
-router.get("/", async (req: AuthenticatedRequest, res: Response) => {
-  const conversations = await conversationService.listByUserId(req.user!.id);
-  const experiments = getExperimentInfo();
-  const customAgents = await customAgentService.listByUser(req.user!.id);
-  const selectedId = req.query.id as string | undefined;
-  const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
-
-  let selectedConversation = null;
-  let messages: Awaited<ReturnType<typeof conversationService.getMessages>> = [];
-
-  if (selectedId) {
-    selectedConversation = await conversationService.get(selectedId);
-    if (selectedConversation && selectedConversation.userId === req.user!.id) {
-      messages = await conversationService.getMessages(selectedId);
-    } else {
-      selectedConversation = null;
-    }
-  }
-
-  res.render("chat", {
-    title: selectedConversation ? `Chat - ${selectedConversation.agentId}` : "Conversations",
-    conversations,
-    experiments,
-    customAgents,
-    selectedConversation,
-    messages,
-    user: req.user,
-    hasOpenRouter,
-  });
+// Redirect root to /conversations
+router.get("/", async (_req: AuthenticatedRequest, res: Response) => {
+  res.redirect("/conversations");
 });
 
 // Helper to get available knowledge bases for custom agent editor
@@ -255,14 +230,41 @@ router.get("/agents", async (req: AuthenticatedRequest, res: Response) => {
   });
 });
 
-// Redirect old conversation URLs to root
-router.get("/conversations/:id", async (req: AuthenticatedRequest, res: Response) => {
-  res.redirect(`/?id=${req.params.id}`);
+// Conversations view (canonical URL)
+router.get("/conversations", async (req: AuthenticatedRequest, res: Response) => {
+  const conversations = await conversationService.listByUserId(req.user!.id);
+  const experiments = getExperimentInfo();
+  const customAgents = await customAgentService.listByUser(req.user!.id);
+  const selectedId = req.query.id as string | undefined;
+  const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
+
+  let selectedConversation = null;
+  let messages: Awaited<ReturnType<typeof conversationService.getMessages>> = [];
+
+  if (selectedId) {
+    selectedConversation = await conversationService.get(selectedId);
+    if (selectedConversation && selectedConversation.userId === req.user!.id) {
+      messages = await conversationService.getMessages(selectedId);
+    } else {
+      selectedConversation = null;
+    }
+  }
+
+  res.render("chat", {
+    title: selectedConversation ? `Chat - ${selectedConversation.agentId}` : "Conversations",
+    conversations,
+    experiments,
+    customAgents,
+    selectedConversation,
+    messages,
+    user: req.user,
+    hasOpenRouter,
+  });
 });
 
-// Redirect /conversations to root
-router.get("/conversations", async (_req: AuthenticatedRequest, res: Response) => {
-  res.redirect("/");
+// Redirect old /conversations/:id URLs to canonical format
+router.get("/conversations/:id", async (req: AuthenticatedRequest, res: Response) => {
+  res.redirect(`/conversations?id=${req.params.id}`);
 });
 
 // New conversation form
@@ -287,6 +289,37 @@ router.get("/settings", async (req: AuthenticatedRequest, res: Response) => {
     providers: {
       openrouter: { connected: hasOpenRouter },
     },
+    user: req.user,
+    hasOpenRouter,
+  });
+});
+
+// Cockpit - Module Writer with mock server and event stream
+router.get("/cockpit/:conversationId", async (req: AuthenticatedRequest, res: Response) => {
+  const conversationId = req.params.conversationId!;
+  const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
+
+  // Verify conversation exists and belongs to user
+  const conversation = await conversationService.get(conversationId);
+  if (!conversation) {
+    return res.redirect("/conversations");
+  }
+
+  if (conversation.userId !== req.user!.id) {
+    return res.redirect("/conversations");
+  }
+
+  // Get or create cockpit session
+  const session = await cockpitSessionService.getOrCreate(conversationId, req.user!.id);
+
+  // Get messages for the conversation
+  const messages = await conversationService.getMessages(conversationId);
+
+  res.render("cockpit", {
+    title: "Module Writer Cockpit",
+    conversation,
+    session,
+    messages,
     user: req.user,
     hasOpenRouter,
   });
