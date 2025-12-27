@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as AgentsRouteImport } from './routes/agents'
@@ -23,11 +22,6 @@ import { Route as AgentsAgentIdRouteImport } from './routes/agents.$agentId'
 import { Route as AgentsAgentIdIndexRouteImport } from './routes/agents.$agentId.index'
 import { Route as AgentsAgentIdEditRouteImport } from './routes/agents.$agentId.edit'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const KnowledgeRoute = KnowledgeRouteImport.update({
   id: '/knowledge',
   path: '/knowledge',
@@ -94,7 +88,6 @@ export interface FileRoutesByFullPath {
   '/agents': typeof AgentsRouteWithChildren
   '/conversations': typeof ConversationsRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
-  '/settings': typeof SettingsRoute
   '/agents/$agentId': typeof AgentsAgentIdRouteWithChildren
   '/agents/new': typeof AgentsNewRoute
   '/cockpit/$conversationId': typeof CockpitConversationIdRoute
@@ -107,7 +100,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/conversations': typeof ConversationsRoute
-  '/settings': typeof SettingsRoute
   '/agents/new': typeof AgentsNewRoute
   '/cockpit/$conversationId': typeof CockpitConversationIdRoute
   '/knowledge/$kbId': typeof KnowledgeKbIdRoute
@@ -122,7 +114,6 @@ export interface FileRoutesById {
   '/agents': typeof AgentsRouteWithChildren
   '/conversations': typeof ConversationsRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
-  '/settings': typeof SettingsRoute
   '/agents/$agentId': typeof AgentsAgentIdRouteWithChildren
   '/agents/new': typeof AgentsNewRoute
   '/cockpit/$conversationId': typeof CockpitConversationIdRoute
@@ -139,7 +130,6 @@ export interface FileRouteTypes {
     | '/agents'
     | '/conversations'
     | '/knowledge'
-    | '/settings'
     | '/agents/$agentId'
     | '/agents/new'
     | '/cockpit/$conversationId'
@@ -152,7 +142,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/conversations'
-    | '/settings'
     | '/agents/new'
     | '/cockpit/$conversationId'
     | '/knowledge/$kbId'
@@ -166,7 +155,6 @@ export interface FileRouteTypes {
     | '/agents'
     | '/conversations'
     | '/knowledge'
-    | '/settings'
     | '/agents/$agentId'
     | '/agents/new'
     | '/cockpit/$conversationId'
@@ -182,19 +170,11 @@ export interface RootRouteChildren {
   AgentsRoute: typeof AgentsRouteWithChildren
   ConversationsRoute: typeof ConversationsRoute
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
-  SettingsRoute: typeof SettingsRoute
   CockpitConversationIdRoute: typeof CockpitConversationIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/knowledge': {
       id: '/knowledge'
       path: '/knowledge'
@@ -330,7 +310,6 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsRoute: AgentsRouteWithChildren,
   ConversationsRoute: ConversationsRoute,
   KnowledgeRoute: KnowledgeRouteWithChildren,
-  SettingsRoute: SettingsRoute,
   CockpitConversationIdRoute: CockpitConversationIdRoute,
 }
 export const routeTree = rootRouteImport

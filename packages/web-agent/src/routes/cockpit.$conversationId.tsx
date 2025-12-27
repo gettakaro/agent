@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import styled from 'styled-components';
 import { useConversationQuery, useMessagesQuery } from '../queries/conversations';
 import {
@@ -13,7 +13,6 @@ import {
 } from '../queries/cockpit';
 import { useSSE } from '../hooks/useSSE';
 import { useCockpitEvents } from '../hooks/useCockpitEvents';
-import { useAuth } from '../hooks/useAuth';
 import { MessageBubble, StreamingMessage } from '../components/chat/MessageBubble';
 import { ChatInput } from '../components/chat/ChatInput';
 import { MockServerControl } from '../components/cockpit/MockServerControl';
@@ -97,22 +96,6 @@ const SidePanel = styled.div`
   overflow-y: auto;
 `;
 
-const SetupWarning = styled.div`
-  padding: 1rem;
-  margin: 1rem;
-  background: ${({ theme }) => `${theme.colors.warning}22`};
-  border: 1px solid ${({ theme }) => `${theme.colors.warning}44`};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  color: ${({ theme }) => theme.colors.warning};
-  font-size: 0.875rem;
-  text-align: center;
-
-  a {
-    color: ${({ theme }) => theme.colors.warning};
-    font-weight: 500;
-  }
-`;
-
 const LoadingState = styled.div`
   flex: 1;
   display: flex;
@@ -153,9 +136,7 @@ const ErrorState = styled.div`
 `;
 
 function CockpitPage() {
-  const navigate = useNavigate();
   const { conversationId } = Route.useParams();
-  const { hasOpenRouter } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [events, setEvents] = useState<CockpitEvent[]>([]);
 
@@ -300,13 +281,6 @@ function CockpitPage() {
           </HeaderTop>
         </ChatHeader>
 
-        {!hasOpenRouter && (
-          <SetupWarning>
-            Please configure your OpenRouter API key in{' '}
-            <Link to="/settings">Settings</Link> to start chatting.
-          </SetupWarning>
-        )}
-
         <MessagesContainer>
           {messages.length === 0 && !isStreaming && (
             <div style={{ color: 'var(--text-alt)', textAlign: 'center', padding: '2rem' }}>
@@ -337,14 +311,8 @@ function CockpitPage() {
 
         <ChatInput
           onSend={handleSendMessage}
-          disabled={!hasOpenRouter || isStreaming}
-          placeholder={
-            !hasOpenRouter
-              ? 'Configure API key to chat...'
-              : isStreaming
-              ? 'Waiting for response...'
-              : 'Describe the module you want to build...'
-          }
+          disabled={isStreaming}
+          placeholder={isStreaming ? 'Waiting for response...' : 'Describe the module you want to build...'}
         />
       </ChatPanel>
 

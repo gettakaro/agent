@@ -60,7 +60,7 @@ export interface ToolContext {
   userId?: string;
   takaroClient?: Client;
   provider?: LLMProvider;
-  openrouterApiKey?: string;
+  openrouterApiKey: string;
 }
 
 // Tool definition - model agnostic

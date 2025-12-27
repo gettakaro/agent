@@ -33,9 +33,9 @@ TAKARO_PASSWORD=your-password
 
 Without service credentials, API routes return 401 and view routes redirect to Takaro login.
 
-**LLM Provider Keys (BYOK)**
+**LLM Provider**
 
-Users provide their OpenRouter API key via `/auth/openrouter`. Keys stored in `user_api_keys` table.
+Server uses `OPENROUTER_API_KEY` environment variable (required at startup).
 
 ## Endpoints
 
@@ -43,9 +43,7 @@ Users provide their OpenRouter API key via `/auth/openrouter`. Keys stored in `u
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/auth/openrouter` | Save user's OpenRouter API key |
-| DELETE | `/auth/openrouter` | Delete user's OpenRouter API key |
-| GET | `/auth/status` | Check provider connection status |
+| GET | `/auth/me` | Get current user info |
 
 ### Conversations (`/api/conversations`)
 
@@ -150,7 +148,6 @@ Custom agents: `custom:{uuid}`
 ## Gotchas
 
 - **Agent ID format**: `{type}/{experiment}` or `custom:{uuid}`
-- **OpenRouter required**: Creating conversation fails with `NO_CREDENTIALS` without API key
 - **Ownership checks**: All operations verify user owns the resource (403 otherwise)
 - **Title generation**: Auto-generated after first exchange (fire-and-forget)
 - **Error format**: `{"error": "message"}`, some include `code` field

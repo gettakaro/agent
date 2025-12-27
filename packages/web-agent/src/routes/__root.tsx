@@ -1,6 +1,6 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import styled from 'styled-components';
-import { Navbar, SetupBanner } from '../components/layout';
+import { Navbar } from '../components/layout';
 
 const AppContainer = styled.div`
   height: 100vh;
@@ -24,7 +24,6 @@ function RootComponent() {
   return (
     <AppContainer>
       <Navbar />
-      <SetupBanner />
       <MainArea>
         <Outlet />
       </MainArea>

@@ -8,7 +8,6 @@ import {
   useDeleteConversationMutation,
 } from '../queries/conversations';
 import { useSSE } from '../hooks/useSSE';
-import { useAuth } from '../hooks/useAuth';
 import { ChatSidebar } from '../components/chat/ChatSidebar';
 import { MessageBubble, StreamingMessage } from '../components/chat/MessageBubble';
 import { ChatInput } from '../components/chat/ChatInput';
@@ -173,22 +172,6 @@ const EmptyChat = styled.div`
   }
 `;
 
-const SetupWarning = styled.div`
-  padding: 1rem;
-  margin: 1rem;
-  background: ${({ theme }) => `${theme.colors.warning}22`};
-  border: 1px solid ${({ theme }) => `${theme.colors.warning}44`};
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  color: ${({ theme }) => theme.colors.warning};
-  font-size: 0.875rem;
-  text-align: center;
-
-  a {
-    color: ${({ theme }) => theme.colors.warning};
-    font-weight: 500;
-  }
-`;
-
 const ToolGroupContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -209,7 +192,6 @@ const RoleLabel = styled.div`
 function ConversationsPage() {
   const navigate = useNavigate();
   const { id: selectedId } = useSearch({ from: '/conversations' });
-  const { hasOpenRouter } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -308,13 +290,6 @@ function ConversationsPage() {
               </ChatMeta>
             </ChatHeader>
 
-            {!hasOpenRouter && (
-              <SetupWarning>
-                Please configure your OpenRouter API key in{' '}
-                <Link to="/settings">Settings</Link> to start chatting.
-              </SetupWarning>
-            )}
-
             <MessagesContainer>
               {groupedMessages.map((item, index) => {
                 if (item.type === 'tool-group') {
@@ -355,14 +330,8 @@ function ConversationsPage() {
 
             <ChatInput
               onSend={handleSendMessage}
-              disabled={!hasOpenRouter || isStreaming}
-              placeholder={
-                !hasOpenRouter
-                  ? 'Configure API key to chat...'
-                  : isStreaming
-                  ? 'Waiting for response...'
-                  : 'Type a message...'
-              }
+              disabled={isStreaming}
+              placeholder={isStreaming ? 'Waiting for response...' : 'Type a message...'}
             />
           </>
         ) : (
