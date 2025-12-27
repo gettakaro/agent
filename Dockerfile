@@ -1,10 +1,18 @@
 # Stage 1: Build
 FROM node:22-alpine AS build
 WORKDIR /app
+
+# Copy package files for all workspaces
 COPY package*.json ./
+COPY packages/web-agent/package*.json ./packages/web-agent/
 RUN npm ci
+
+# Copy source
 COPY tsconfig.json ./
 COPY src ./src
+COPY packages/web-agent ./packages/web-agent
+
+# Build React app, then backend (build script handles both)
 RUN npm run build
 
 # Stage 2: Production runtime

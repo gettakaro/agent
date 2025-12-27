@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import cookieParser from "cookie-parser";
@@ -5,34 +6,26 @@ import cors from "cors";
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
 import { config } from "../config.js";
 import { formatError } from "../utils/formatError.js";
+import agentRoutes from "./routes/agents.js";
 import authRoutes from "./routes/auth.js";
 import { cockpitRoutes } from "./routes/cockpit.js";
 import { conversationRoutes } from "./routes/conversations.js";
 import { customAgentRoutes } from "./routes/custom-agents.js";
 import { knowledgeRoutes } from "./routes/knowledge.js";
-import { viewRoutes } from "./routes/views.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function createApp(): Express {
   const app = express();
 
-  // View engine setup
-  app.set("view engine", "ejs");
-  app.set("views", path.join(__dirname, "../views"));
+  // Check if client build exists (production only)
+  const clientPath = path.join(__dirname, "../client");
+  const clientExists = fs.existsSync(clientPath);
 
-  // Static files
-  app.use("/public", express.static(path.join(__dirname, "../public")));
-
-  // Block source map requests from hitting dynamic routes
-  // (browsers request .map files relative to current URL, not /public)
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path.endsWith(".map")) {
-      res.status(404).send("Not found");
-      return;
-    }
-    next();
-  });
+  // Serve React static files only if client build exists
+  if (clientExists) {
+    app.use(express.static(clientPath));
+  }
 
   // CORS configuration
   app.use(
@@ -64,15 +57,24 @@ export function createApp(): Express {
     res.json({ status: "ok" });
   });
 
-  // View routes (HTML pages)
-  app.use("/", viewRoutes);
-
   // API routes
   app.use("/auth", authRoutes);
+  app.use("/api/agents", agentRoutes);
   app.use("/api/conversations", conversationRoutes);
   app.use("/api/custom-agents", customAgentRoutes);
   app.use("/api/knowledge-bases", knowledgeRoutes);
   app.use("/api/cockpit", cockpitRoutes);
+
+  // SPA fallback - serve index.html for non-API routes (production only)
+  if (clientExists) {
+    app.get("*", (req: Request, res: Response, next: NextFunction) => {
+      // Skip API and auth routes (they should 404 normally)
+      if (req.path.startsWith("/api") || req.path.startsWith("/auth") || req.path === "/health") {
+        return next();
+      }
+      res.sendFile(path.join(clientPath, "index.html"));
+    });
+  }
 
   // Error handler
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
