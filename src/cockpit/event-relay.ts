@@ -86,7 +86,10 @@ export class EventRelay {
     });
 
     this.socket.on("connect_error", (error) => {
-      console.error(`[EventRelay] Connection error: ${error.message}`, (error as Error & { cause?: unknown }).cause || "");
+      console.error(
+        `[EventRelay] Connection error: ${error.message}`,
+        (error as Error & { cause?: unknown }).cause || "",
+      );
     });
 
     // Listen for Takaro events (handles both array and single event formats)
@@ -113,7 +116,7 @@ export class EventRelay {
     }
 
     // Relay to matching SSE clients
-    this.sseClients.forEach((client, sessionId) => {
+    this.sseClients.forEach((client, _sessionId) => {
       if (event.gameserverId && event.gameserverId === client.gameServerId) {
         this.sendToClient(client.res, "event", event);
       }
@@ -134,7 +137,7 @@ export class EventRelay {
 
     this.heartbeatInterval = setInterval(() => {
       const now = Date.now();
-      this.sseClients.forEach((client, sessionId) => {
+      this.sseClients.forEach((client, _sessionId) => {
         // Send heartbeat every 30 seconds
         if (now - client.lastHeartbeat > 30000) {
           this.sendToClient(client.res, "heartbeat", { time: new Date().toISOString() });
@@ -162,9 +165,7 @@ export class EventRelay {
         });
 
         // Filter to relevant events and send in chronological order (oldest first)
-        const relevantEvents = eventsRes.data.data
-          .filter((e) => RELEVANT_EVENTS.includes(e.eventName))
-          .reverse();
+        const relevantEvents = eventsRes.data.data.filter((e) => RELEVANT_EVENTS.includes(e.eventName)).reverse();
 
         console.log(`[EventRelay] Sending ${relevantEvents.length} historical events for session ${sessionId}`);
 

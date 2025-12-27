@@ -21,7 +21,10 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
 
       return {
         id: compoundId,
-        name: base.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+        name: base
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" "),
         type: base,
         experiment: experiment || "default",
         model: config?.model || "unknown",

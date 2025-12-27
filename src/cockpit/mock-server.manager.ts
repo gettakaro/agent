@@ -87,7 +87,9 @@ export class MockServerManager {
       const serverName = `AI-Cockpit-${userId.slice(0, 8)}`;
 
       // Derive WebSocket URL from API URL (https://api.x.y -> wss://connect.x.y)
-      const wsUrl = config.takaroApiUrl.replace("https://api.", "wss://connect.").replace("http://api.", "ws://connect.");
+      const wsUrl = config.takaroApiUrl
+        .replace("https://api.", "wss://connect.")
+        .replace("http://api.", "ws://connect.");
 
       // Start mock server
       console.log(`[MockServer] Starting mock server for session ${sessionId} (ws: ${wsUrl})`);
@@ -130,7 +132,11 @@ export class MockServerManager {
       // Get online players from the game server
       const onlinePlayersRes = await takaroClient.gameserver.gameServerControllerGetPlayers(gameServerId);
       // Type assertion needed as API returns array but types say single object
-      const onlinePlayers = (onlinePlayersRes.data.data as unknown as Array<{ name: string; gameId: string; steamId?: string }>);
+      const onlinePlayers = onlinePlayersRes.data.data as unknown as Array<{
+        name: string;
+        gameId: string;
+        steamId?: string;
+      }>;
 
       const players: MockPlayer[] = [];
       for (const op of onlinePlayers) {
