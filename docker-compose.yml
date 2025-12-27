@@ -18,10 +18,41 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /app/packages/web-agent
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "${WEB_PORT:-3101}:3101"
+    environment:
+      VITE_API_URL: http://app:3100
+    depends_on:
+      - app
+    command: npm run dev
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      DATABASE_URL: postgresql://takaro:takaro@postgres:5432/takaro_agent
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run db:migrate
+    restart: "no"
 
   postgres:
     image: pgvector/pgvector:pg16
