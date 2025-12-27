@@ -283,7 +283,7 @@ router.post("/:id/messages", async (req: AuthenticatedRequest, res: Response) =>
     await conversationService.updateState(conversationId, context.state);
 
     // Generate title for first exchange (fire and forget)
-    if (!conversation.title && context.openrouterApiKey) {
+    if (!conversation.title) {
       const userMsg = messages.find((m) => m.role === "user")?.content || "";
       const assistantMsg = response.messages.find((m) => m.role === "assistant")?.content || "";
 
