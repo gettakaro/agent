@@ -1,0 +1,9 @@
+{
+  "portVarPatterns": ["*_PORT"],
+  "portRange": [30000, 39999],
+  "portMapping": {
+    "APP_PORT": { "service": "app", "containerPort": 3100 },
+    "POSTGRES_HOST_PORT": { "service": "postgres", "containerPort": 5432 },
+    "REDIS_HOST_PORT": { "service": "redis", "containerPort": 6379 }
+  }
+}

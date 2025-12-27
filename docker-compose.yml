@@ -3,12 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: takaro-agent-app
     volumes:
       - .:/app
       - /app/node_modules
     ports:
-      - "3100:3100"
+      - "${APP_PORT:-3100}:3100"
     env_file:
       - .env
     environment:
@@ -26,13 +25,12 @@ services:
 
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: takaro-agent-db
     environment:
       POSTGRES_USER: takaro
       POSTGRES_PASSWORD: takaro
       POSTGRES_DB: takaro_agent
     ports:
-      - "5433:5432"
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -43,9 +41,8 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: takaro-agent-redis
     ports:
-      - "6379:6379"
+      - "${REDIS_HOST_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
