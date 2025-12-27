@@ -33,6 +33,11 @@ router.delete("/openrouter", authMiddleware({ redirect: false }), async (req: Au
   }
 });
 
+// Get current user info
+router.get("/me", authMiddleware({ redirect: false }), async (req: AuthenticatedRequest, res: Response) => {
+  res.json({ data: req.user });
+});
+
 // Check provider connection status
 router.get("/status", authMiddleware({ redirect: false }), async (req: AuthenticatedRequest, res: Response) => {
   try {
