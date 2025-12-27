@@ -295,7 +295,7 @@ function CockpitPage() {
         {!hasOpenRouter && (
           <SetupWarning>
             Please configure your OpenRouter API key in{' '}
-            <a href="/settings">Settings</a> to start chatting.
+            <Link to="/settings">Settings</Link> to start chatting.
           </SetupWarning>
         )}
 
@@ -312,7 +312,6 @@ function CockpitPage() {
 
           {isStreaming && (
             <StreamingMessage
-              role="assistant"
               content={streamingContent}
               toolExecutions={streamingTools}
               isComplete={false}

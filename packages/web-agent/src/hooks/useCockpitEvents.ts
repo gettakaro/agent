@@ -16,6 +16,14 @@ export function useCockpitEvents({
 }: UseCockpitEventsOptions) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const onEventRef = useRef(onEvent);
+  const onErrorRef = useRef(onError);
+
+  // Keep refs in sync with latest callbacks
+  useEffect(() => {
+    onEventRef.current = onEvent;
+    onErrorRef.current = onError;
+  });
 
   const connect = useCallback(() => {
     if (!sessionId || !enabled) return;
@@ -36,7 +44,7 @@ export function useCockpitEvents({
     eventSource.addEventListener('event', (e) => {
       try {
         const event = JSON.parse(e.data) as CockpitEvent;
-        onEvent(event);
+        onEventRef.current(event);
       } catch (err) {
         console.error('Failed to parse cockpit event:', err);
       }
@@ -48,7 +56,7 @@ export function useCockpitEvents({
 
     eventSource.onerror = (e) => {
       console.error('Cockpit event stream error:', e);
-      onError?.(e);
+      onErrorRef.current?.(e);
 
       // Auto-reconnect after 5 seconds
       if (reconnectTimeoutRef.current) {
@@ -62,7 +70,7 @@ export function useCockpitEvents({
     };
 
     eventSourceRef.current = eventSource;
-  }, [sessionId, enabled, onEvent, onError]);
+  }, [sessionId, enabled]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

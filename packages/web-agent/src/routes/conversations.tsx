@@ -257,11 +257,6 @@ function ConversationsPage() {
       const conversation = await createConversation.mutateAsync({ agentId, initialMessage });
       setIsModalOpen(false);
       navigate({ to: '/conversations', search: { id: conversation.id } });
-
-      // If there was an initial message, the backend already sent it, so refetch messages
-      if (initialMessage) {
-        setTimeout(() => refetchMessages(), 500);
-      }
     } catch (err) {
       console.error('Failed to create conversation:', err);
     }
@@ -342,7 +337,6 @@ function ConversationsPage() {
 
               {isStreaming && (
                 <StreamingMessage
-                  role="assistant"
                   content={streamingContent}
                   toolExecutions={streamingTools}
                   isComplete={false}

@@ -100,7 +100,6 @@ export function MessageBubble({ message, isFirstInGroup = true, isLastInGroup = 
 
 // Streaming message that builds up content and tool executions in real-time
 interface StreamingMessageProps {
-  role: 'assistant';
   content: string;
   toolExecutions: Array<{
     id: string;

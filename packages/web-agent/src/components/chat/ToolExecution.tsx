@@ -136,17 +136,17 @@ const PendingSpinner = styled.span`
   }
 `;
 
+function formatJson(data: unknown): string {
+  try {
+    return JSON.stringify(data, null, 2);
+  } catch {
+    return String(data);
+  }
+}
+
 export function ToolExecution({ execution, compact, pending }: ToolExecutionProps) {
   const [expanded, setExpanded] = useState(false);
   const success = execution.result.success;
-
-  const formatJson = (data: unknown): string => {
-    try {
-      return JSON.stringify(data, null, 2);
-    } catch {
-      return String(data);
-    }
-  };
 
   return (
     <Container $compact={compact}>
@@ -298,7 +298,7 @@ export function StreamingToolExecution({
         <Content>
           <Section>
             <SectionLabel>Input</SectionLabel>
-            <CodeBlock>{JSON.stringify(input, null, 2)}</CodeBlock>
+            <CodeBlock>{formatJson(input)}</CodeBlock>
           </Section>
           {result && (
             <Section>
@@ -308,7 +308,7 @@ export function StreamingToolExecution({
                   <ErrorText>{result.error}</ErrorText>
                 </CodeBlock>
               ) : (
-                <CodeBlock>{JSON.stringify(result.output, null, 2)}</CodeBlock>
+                <CodeBlock>{formatJson(result.output)}</CodeBlock>
               )}
             </Section>
           )}

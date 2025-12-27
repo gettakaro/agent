@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import styled from 'styled-components';
 import { useKnowledgeBasesQuery, useSyncKnowledgeBaseMutation } from '../queries/knowledge';
@@ -245,9 +246,15 @@ function formatDate(dateString: string): string {
 function KnowledgePage() {
   const { data: knowledgeBases, isLoading, error } = useKnowledgeBasesQuery();
   const syncMutation = useSyncKnowledgeBaseMutation();
+  const [syncingId, setSyncingId] = useState<string | null>(null);
 
-  const handleSync = (id: string) => {
-    syncMutation.mutate(id);
+  const handleSync = async (id: string) => {
+    setSyncingId(id);
+    try {
+      await syncMutation.mutateAsync(id);
+    } finally {
+      setSyncingId(null);
+    }
   };
 
   if (isLoading) {
@@ -301,7 +308,7 @@ function KnowledgePage() {
             <KnowledgeBaseCard
               kb={kb}
               onSync={() => handleSync(kb.id)}
-              isSyncing={syncMutation.isPending}
+              isSyncing={syncingId === kb.id}
             />
           </KnowledgeCardLink>
         ))}

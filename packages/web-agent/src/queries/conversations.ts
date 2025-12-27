@@ -71,8 +71,12 @@ export function useCreateConversationMutation() {
       });
       return response.data.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: conversationKeys.list() });
+      // If initial message was sent, invalidate messages to show them
+      if (variables.initialMessage) {
+        queryClient.invalidateQueries({ queryKey: conversationKeys.messages(data.id) });
+      }
     },
   });
 }
