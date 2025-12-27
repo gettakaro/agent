@@ -67,12 +67,7 @@ async function main() {
     console.log("  DELETE /conversations/:id");
     console.log("  GET  /conversations/:id/messages");
     console.log("  POST /conversations/:id/messages (SSE)");
-    console.log("  POST /auth/openrouter (Save API key)");
-    console.log("  DELETE /auth/openrouter (Remove API key)");
-    console.log("  GET  /auth/claude (OAuth initiate)");
-    console.log("  GET  /auth/claude/callback (OAuth callback)");
-    console.log("  DELETE /auth/claude (Disconnect)");
-    console.log("  GET  /auth/status (All providers)");
+    console.log("  GET  /auth/me");
   });
 
   // Graceful shutdown

@@ -4,8 +4,8 @@ const configSchema = z.object({
   port: z.coerce.number().default(3100),
   databaseUrl: z.string().url(),
   redisUrl: z.string().url().default("redis://localhost:6379"),
-  // Legacy/testing only - users now provide their own keys
-  openrouterApiKey: z.string().optional(),
+  // Required - server-wide OpenRouter API key
+  openrouterApiKey: z.string().min(1, "OPENROUTER_API_KEY environment variable is required"),
   takaroApiUrl: z.string().url().default("https://api.takaro.io"),
   takaroLoginUrl: z.string().url().default("https://dashboard.takaro.io/login"),
   corsOrigins: z

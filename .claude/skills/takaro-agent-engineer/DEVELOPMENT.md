@@ -173,10 +173,6 @@ docker compose exec redis redis-cli ZCARD bull:kb-sync:failed
 
 ## Common Issues
 
-**"NO_CREDENTIALS" error when creating conversation**
-- User hasn't set their OpenRouter API key
-- In dev mode, check if service account env vars are set
-
 **Database connection errors**
 - Check PostgreSQL is running: `docker compose ps`
 - Port 5433 (host) maps to 5432 (container)

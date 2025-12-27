@@ -8,7 +8,6 @@ PostgreSQL 16 with pgvector extension. Redis for BullMQ job queues.
 |-------|-------------|
 | `conversations` | Chat sessions with agents. Stores agent_id, state (JSON), user_id, title |
 | `messages` | Individual messages with role, content, tool_calls, tool_results, tokens, latency |
-| `user_api_keys` | User-provided API keys (OpenRouter). One key per user/provider combo |
 | `custom_agents` | User-created agent configurations |
 | `knowledge_embeddings` | Vector embeddings for RAG (1536 dimensions, HNSW index) |
 | `knowledge_sync_state` | Tracks sync state for knowledge base updates |
@@ -118,12 +117,13 @@ docker compose exec app npm run db:rollback
 1. `001_initial.ts` - conversations, messages tables
 2. `002_claude_tokens.ts` - (deprecated)
 3. `003_conversation_provider.ts` - Added provider column
-4. `004_user_api_keys.ts` - User API key storage (BYOK)
+4. `004_user_api_keys.ts` - User API key storage (dropped by 010)
 5. `005_drop_claude_tokens.ts` - Cleanup
 6. `006_knowledge_embeddings.ts` - Vector embeddings (pgvector)
 7. `007_knowledge_sync_state.ts` - Knowledge sync tracking
 8. `008_custom_agents.ts` - User agent configurations
 9. `009_cockpit_sessions.ts` - Mock server sessions
+10. `010_drop_user_api_keys.ts` - Removes user_api_keys table (API key now from env var)
 
 **Migration location:** `src/db/migrations/`
 

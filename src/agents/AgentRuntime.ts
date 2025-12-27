@@ -24,10 +24,7 @@ export class AgentRuntime implements IAgent {
   }
 
   private getProvider(context: ToolContext): ILLMProvider {
-    if (context.openrouterApiKey) {
-      return new OpenRouterProvider(context.openrouterApiKey);
-    }
-    throw new Error("No OpenRouter API key available. Please configure your API key in settings.");
+    return new OpenRouterProvider(context.openrouterApiKey);
   }
 
   async chat(

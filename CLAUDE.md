@@ -93,9 +93,6 @@ The module-writer agent builds Takaro modules via direct API calls. It maintains
 
 The authenticated `Client` from `@takaro/apiclient` is attached to requests as `req.takaroClient` and passed to tools via `context.takaroClient`.
 
-**LLM Credentials (BYOK)** (`src/auth/`, `/settings` page):
-Users must provide their own OpenRouter API key via the Settings page (stored in `user_api_keys` table).
-
 ### Conversations (`src/conversations/`)
 
 Conversations and messages are stored in PostgreSQL. Each conversation tracks:
@@ -105,7 +102,7 @@ Conversations and messages are stored in PostgreSQL. Each conversation tracks:
 
 ### LLM Provider (`src/agents/providers/`)
 
-**OpenRouterProvider**: Uses OpenAI SDK pointed at OpenRouter's API. Requires user's OpenRouter API key. Supports streaming - chunks are emitted via callback and forwarded as SSE events.
+**OpenRouterProvider**: Uses OpenAI SDK pointed at OpenRouter's API. Uses server-wide `OPENROUTER_API_KEY` env var. Supports streaming - chunks are emitted via callback and forwarded as SSE events.
 
 ## Key Types
 

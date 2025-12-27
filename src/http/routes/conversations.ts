@@ -2,8 +2,8 @@ import { type Response, Router } from "express";
 import { parseAgentId } from "../../agents/experiments.js";
 import { agentRegistry } from "../../agents/registry.js";
 import type { IAgent, StreamChunk, ToolContext } from "../../agents/types.js";
-import { ApiKeyService } from "../../auth/api-key.service.js";
 import { CockpitSessionService } from "../../cockpit/index.js";
+import { config } from "../../config.js";
 import { ConversationService } from "../../conversations/service.js";
 import { generateTitle } from "../../conversations/title-generator.js";
 import { CustomAgentService, createAgentFromCustom } from "../../custom-agents/index.js";
@@ -12,7 +12,6 @@ import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js
 
 const router = Router();
 const conversationService = new ConversationService();
-const apiKeyService = new ApiKeyService();
 const customAgentService = new CustomAgentService();
 const cockpitSessionService = new CockpitSessionService();
 
@@ -38,8 +37,6 @@ async function buildContext(
   agentVersion: string,
   state: Record<string, unknown>,
 ): Promise<ToolContext> {
-  const apiKey = await apiKeyService.getApiKey(req.user!.id, "openrouter");
-
   // Check if conversation has a cockpit session with active mock server
   const cockpitSession = await cockpitSessionService.getByConversation(conversationId);
   if (cockpitSession?.mockServerGameServerId && cockpitSession.mockServerStatus === "running") {
@@ -58,7 +55,7 @@ async function buildContext(
     userId: req.user!.id,
     takaroClient: req.takaroClient,
     provider: "openrouter",
-    openrouterApiKey: apiKey || undefined,
+    openrouterApiKey: config.openrouterApiKey,
   };
 }
 
@@ -69,16 +66,6 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
 
     if (!agentId) {
       res.status(400).json({ error: "agentId is required" });
-      return;
-    }
-
-    // Check user has OpenRouter configured
-    const hasOpenRouter = await apiKeyService.hasApiKey(req.user!.id, "openrouter");
-    if (!hasOpenRouter) {
-      res.status(400).json({
-        error: "No API credentials configured. Please add your OpenRouter key in settings.",
-        code: "NO_CREDENTIALS",
-      });
       return;
     }
 
@@ -296,7 +283,7 @@ router.post("/:id/messages", async (req: AuthenticatedRequest, res: Response) =>
     await conversationService.updateState(conversationId, context.state);
 
     // Generate title for first exchange (fire and forget)
-    if (!conversation.title && context.openrouterApiKey) {
+    if (!conversation.title) {
       const userMsg = messages.find((m) => m.role === "user")?.content || "";
       const assistantMsg = response.messages.find((m) => m.role === "assistant")?.content || "";
 
