@@ -170,7 +170,9 @@ function CockpitPage() {
   );
 
   // Use serverStatus (polled) if available, otherwise fall back to session
-  const isServerRunning = serverStatus?.status === 'running' || session?.mockServerStatus === 'running';
+  const isServerRunning = serverStatus
+    ? serverStatus.status === 'running'
+    : session?.mockServerStatus === 'running';
 
   const { data: playersData, isLoading: playersLoading } = usePlayersQuery(
     session?.id,
@@ -182,6 +184,12 @@ function CockpitPage() {
   const stopServer = useStopMockServerMutation();
   const sendCommand = useMockServerCommandMutation();
   const selectPlayer = useSelectPlayerMutation();
+
+  // Ref for startServer to avoid useEffect dependency issues
+  const startServerRef = useRef(startServer);
+  useEffect(() => {
+    startServerRef.current = startServer;
+  });
 
   // SSE for chat
   const {
@@ -211,7 +219,7 @@ function CockpitPage() {
   // Auto-start mock server when session loads
   useEffect(() => {
     if (session?.id && session.mockServerStatus !== 'running' && session.mockServerStatus !== 'starting') {
-      startServer.mutate(session.id);
+      startServerRef.current.mutate(session.id);
     }
   }, [session?.id, session?.mockServerStatus]);
 

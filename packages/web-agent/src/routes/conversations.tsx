@@ -311,7 +311,7 @@ function ConversationsPage() {
             {!hasOpenRouter && (
               <SetupWarning>
                 Please configure your OpenRouter API key in{' '}
-                <a href="/settings">Settings</a> to start chatting.
+                <Link to="/settings">Settings</Link> to start chatting.
               </SetupWarning>
             )}
 
