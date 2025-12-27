@@ -118,6 +118,7 @@ jobs:
             -e DATABASE_URL=postgresql://takaro:takaro@localhost:5432/takaro_agent \
             -e REDIS_URL=redis://localhost:6379 \
             -e PORT=3100 \
+            -e OPENROUTER_API_KEY=test-key-for-ci \
             "ghcr.io/${{ github.repository }}:sha-${{ steps.short_sha.outputs.sha }}"
 
       - name: Run database migrations
