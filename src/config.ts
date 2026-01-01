@@ -11,7 +11,10 @@ const configSchema = z.object({
   corsOrigins: z
     .string()
     .default("")
-    .transform((s) => (s ? s.split(",").map((o) => o.trim()) : [])),
+    .transform((s) => {
+      if (!s || s.trim() === "*") return [];
+      return s.split(",").map((o) => o.trim());
+    }),
   takaroUsername: z.string().optional(),
   takaroPassword: z.string().optional(),
 });
