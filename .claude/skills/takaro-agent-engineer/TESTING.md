@@ -31,7 +31,8 @@ The mock provider:
 - Returns predefined responses from a queue
 - Tracks call history for assertions
 - Simulates streaming chunks
-- Throws when response queue is exhausted (catches missing mock setup)
+- In E2E tests: Returns fallback response when queue exhausted (auto-enabled)
+- In unit/integration tests: Throws error when queue exhausted (call `reset()` to disable fallback)
 
 ## Unit Tests
 
@@ -133,6 +134,7 @@ describe("MyService", () => {
 ## Test Directory Structure
 
 ```
+playwright.config.ts            # Playwright config (project root)
 tests/
 ├── unit/
 │   └── tools/              # Tool function tests
@@ -141,7 +143,6 @@ tests/
 │   ├── conversations/      # ConversationService tests
 │   └── agents/             # AgentRuntime tests
 ├── e2e/
-│   ├── playwright.config.ts
 │   └── chat/               # Chat UI flow tests
 └── fixtures/
     ├── mock-responses.ts   # Predefined LLM responses

@@ -26,7 +26,10 @@ export class AgentRuntime implements IAgent {
 
   private getProvider(context: ToolContext): ILLMProvider {
     if (process.env.USE_MOCK_PROVIDER === "true") {
-      return MockLLMProvider.getInstance();
+      const mockProvider = MockLLMProvider.getInstance();
+      // Enable fallback responses for E2E tests (when no explicit responses configured)
+      mockProvider.enableFallbackResponse();
+      return mockProvider;
     }
     return new OpenRouterProvider(context.openrouterApiKey);
   }

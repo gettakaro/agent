@@ -18,8 +18,20 @@ export class MockLLMProvider implements ILLMProvider {
     tools: ToolDefinition[];
     options: ChatOptions;
   }> = [];
+  private useFallbackResponse = false;
 
   private constructor() {}
+
+  /**
+   * Default fallback response used when queue is exhausted and fallback mode is enabled.
+   * Used by E2E tests to provide deterministic responses without explicit setup.
+   */
+  private static readonly DEFAULT_RESPONSE: MockResponse = {
+    content: "Hello! I'm the mock assistant. I received your message and I'm here to help. How can I assist you today?",
+    toolCalls: [],
+    usage: { inputTokens: 50, outputTokens: 30 },
+    stopReason: "end_turn",
+  };
 
   static getInstance(): MockLLMProvider {
     if (!MockLLMProvider.instance) {
@@ -35,6 +47,23 @@ export class MockLLMProvider implements ILLMProvider {
   reset(): void {
     this.responseQueue = [];
     this.callHistory = [];
+    this.useFallbackResponse = false;
+  }
+
+  /**
+   * Enable fallback mode - when response queue is exhausted, return a default response
+   * instead of throwing an error. Useful for E2E tests that don't need precise control.
+   */
+  enableFallbackResponse(): void {
+    this.useFallbackResponse = true;
+  }
+
+  /**
+   * Disable fallback mode - throw error when response queue is exhausted.
+   * This is the default behavior for unit/integration tests.
+   */
+  disableFallbackResponse(): void {
+    this.useFallbackResponse = false;
   }
 
   getCallHistory() {
@@ -50,9 +79,13 @@ export class MockLLMProvider implements ILLMProvider {
   ): Promise<ProviderResponse> {
     this.callHistory.push({ messages: [...messages], systemPrompt, tools: [...tools], options });
 
-    const response = this.responseQueue.shift();
+    let response = this.responseQueue.shift();
     if (!response) {
-      throw new Error("MockLLMProvider: No mock response configured. Call setResponses() first.");
+      if (this.useFallbackResponse) {
+        response = { ...MockLLMProvider.DEFAULT_RESPONSE };
+      } else {
+        throw new Error("MockLLMProvider: No mock response configured. Call setResponses() first.");
+      }
     }
 
     if (onChunk && response.streamChunks) {

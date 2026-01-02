@@ -34,7 +34,7 @@ HTTP Request → Auth Middleware → Conversation Route → AgentRuntime → LLM
 | AgentRegistry | `src/agents/registry.ts` | Stores agent factories by ID |
 | AgentRuntime | `src/agents/AgentRuntime.ts` | Conversation loop, tool execution |
 | ConversationService | `src/conversations/service.ts` | CRUD + message storage |
-| LLM Providers | `src/agents/providers/` | OpenRouter adapter |
+| LLM Providers | `src/agents/providers/` | OpenRouter + Mock for testing |
 
 ### Agent Experiments
 
