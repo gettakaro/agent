@@ -155,3 +155,4 @@ tests/
 - **Call history** - Use `MockLLMProvider.getInstance().getCallHistory()` to assert on LLM calls
 - **Reset between tests** - Call `MockLLMProvider.getInstance().reset()` in beforeEach if reusing
 - **Streaming** - Mock provider emits chunks synchronously; no actual delay simulation
+- **Sequential integration tests** - Integration tests run with `--test-concurrency=1` because each test file starts its own PostgreSQL container; parallel execution would overwhelm Docker

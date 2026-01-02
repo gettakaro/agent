@@ -1,4 +1,4 @@
-import type { ToolContext } from "../../src/agents/types.js";
+import type { ToolContext, ToolDefinition, ToolResult, AgentVersionConfig } from "../../src/agents/types.js";
 
 export function createMockToolContext(overrides: Partial<ToolContext> = {}): ToolContext {
   return {
@@ -140,5 +140,27 @@ export interface MockTakaroClient {
       name: string;
       description?: string;
     }) => Promise<{ data: { data: Partial<MockModuleData> } }>;
+  };
+}
+
+export function createTestTool(
+  name: string,
+  handler: (input: Record<string, unknown>) => ToolResult,
+): ToolDefinition {
+  return {
+    name,
+    description: `Test tool: ${name}`,
+    parameters: { type: "object", properties: {} },
+    execute: async (input: Record<string, unknown>, _context: ToolContext) => handler(input),
+  };
+}
+
+export function createTestConfig(tools: ToolDefinition[] = []): AgentVersionConfig {
+  return {
+    model: "test-model",
+    systemPrompt: "You are a test assistant.",
+    tools,
+    temperature: 0.7,
+    maxTokens: 1000,
   };
 }

@@ -17,7 +17,7 @@
     "db:rollback": "tsx src/db/rollback.ts",
     "test": "USE_MOCK_PROVIDER=true node --import tsx --test 'tests/unit/**/*.test.ts' 'tests/integration/**/*.test.ts'",
     "test:unit": "USE_MOCK_PROVIDER=true node --import tsx --test 'tests/unit/**/*.test.ts'",
-    "test:integration": "USE_MOCK_PROVIDER=true node --import tsx --test 'tests/integration/**/*.test.ts'",
+    "test:integration": "USE_MOCK_PROVIDER=true node --import tsx --test --test-concurrency=1 'tests/integration/**/*.test.ts'",
     "test:e2e": "USE_MOCK_PROVIDER=true playwright test",
     "test:file": "USE_MOCK_PROVIDER=true node --import tsx --test",
     "test:filter": "USE_MOCK_PROVIDER=true node --import tsx --test --test-name-pattern"

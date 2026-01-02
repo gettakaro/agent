@@ -140,29 +140,29 @@ Building a testing skeleton with mock LLM provider that enables free, fast, dete
 
 ### Tasks
 
-- [ ] Task 4.1: Create Testcontainers setup module
+- [x] Task 4.1: Create Testcontainers setup module
   - **Output**: Database setup/teardown helpers
   - **Files**: `tests/integration/setup.ts`
   - **Verify**: Exports `setupTestDatabase()`, `teardownTestDatabase()`
 
-- [ ] Task 4.2: Write ConversationService integration test
+- [x] Task 4.2: Write ConversationService integration test
   - **Depends on**: 4.1
   - **Output**: Tests create, get, addMessage, getMessages
   - **Files**: `tests/integration/conversations/service.test.ts`
   - **Verify**: `npm run test:integration` passes (Docker required)
 
-- [ ] Task 4.3: Write AgentRuntime integration test
+- [x] Task 4.3: Write AgentRuntime integration test
   - **Depends on**: 4.1, Phase 2
   - **Output**: Tests full conversation loop with mock provider + real DB
   - **Files**: `tests/integration/agents/runtime.test.ts`
   - **Verify**: Mock provider returns tool call → tool executes → mock returns final
 
 ### Phase 4 Checkpoint
-- [ ] Run lint: `npm run lint`
-- [ ] Run build: `npm run build`
-- [ ] Run tests: `npm run test:integration` (requires Docker)
-- [ ] Manual verification: Check Testcontainers logs show container start/stop
-- [ ] **Demo ready**: Show integration test with real Postgres container
+- [x] Run lint: `npm run lint`
+- [x] Run build: `npm run build`
+- [x] Run tests: `npm run test:integration` (requires Docker)
+- [x] Manual verification: Check Testcontainers logs show container start/stop
+- [x] **Demo ready**: Show integration test with real Postgres container
 
 ---
 
