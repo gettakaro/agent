@@ -1,4 +1,5 @@
 import { formatError } from "../utils/formatError.js";
+import { MockLLMProvider } from "./providers/MockLLMProvider.js";
 import { OpenRouterProvider } from "./providers/OpenRouterProvider.js";
 import type { ILLMProvider } from "./providers/types.js";
 import type {
@@ -24,6 +25,9 @@ export class AgentRuntime implements IAgent {
   }
 
   private getProvider(context: ToolContext): ILLMProvider {
+    if (process.env.USE_MOCK_PROVIDER === "true") {
+      return MockLLMProvider.getInstance();
+    }
     return new OpenRouterProvider(context.openrouterApiKey);
   }
 

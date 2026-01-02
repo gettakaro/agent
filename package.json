@@ -14,7 +14,13 @@
     "format": "biome format .",
     "format:fix": "biome format --write .",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:rollback": "tsx src/db/rollback.ts"
+    "db:rollback": "tsx src/db/rollback.ts",
+    "test": "USE_MOCK_PROVIDER=true node --import tsx --test 'tests/unit/**/*.test.ts' 'tests/integration/**/*.test.ts'",
+    "test:unit": "USE_MOCK_PROVIDER=true node --import tsx --test 'tests/unit/**/*.test.ts'",
+    "test:integration": "USE_MOCK_PROVIDER=true node --import tsx --test 'tests/integration/**/*.test.ts'",
+    "test:e2e": "USE_MOCK_PROVIDER=true playwright test",
+    "test:file": "USE_MOCK_PROVIDER=true node --import tsx --test",
+    "test:filter": "USE_MOCK_PROVIDER=true node --import tsx --test --test-name-pattern"
   },
   "dependencies": {
     "@takaro/apiclient": "next",
@@ -39,6 +45,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@testcontainers/postgresql": "^10.18.0",
     "@biomejs/biome": "^2.3.9",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.17",
