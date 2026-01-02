@@ -131,15 +131,59 @@ describe("MyService", () => {
 });
 ```
 
+### Adding an API Integration Test
+
+API tests use supertest + test app factory for HTTP endpoint testing:
+
+```typescript
+import { describe, it, before, after } from "node:test";
+import supertest from "supertest";
+import { setupTestDatabase, teardownTestDatabase } from "../setup.js";
+import { createTestApp, createTestUser } from "../../helpers/test-app.js";
+
+describe("My API", () => {
+  let db, agent, user;
+
+  before(async () => {
+    db = await setupTestDatabase();
+    user = createTestUser({ id: "user_123" });
+    const app = createTestApp({ user }); // Injects test auth
+    agent = supertest.agent(app);
+  });
+
+  after(async () => {
+    await teardownTestDatabase(db);
+  });
+
+  it("should return 200", async () => {
+    const res = await agent.get("/api/conversations").expect(200);
+    assert.ok(res.body.data);
+  });
+
+  it("should return 401 when unauthenticated", async () => {
+    const unauthApp = createTestApp(); // No user = 401
+    await supertest(unauthApp).get("/api/conversations").expect(401);
+  });
+});
+```
+
+Key helpers:
+- `createTestApp({ user })` - Creates Express app with test auth middleware
+- `createTestUser()` - Creates a test user object
+- Routes use Zod validation - invalid input returns 400 with `{ error, details }`
+
 ## Test Directory Structure
 
 ```
 playwright.config.ts            # Playwright config (project root)
 tests/
+├── helpers/
+│   └── test-app.ts         # Test app factory + auth helpers
 ├── unit/
 │   └── tools/              # Tool function tests
 ├── integration/
 │   ├── setup.ts            # Testcontainers setup
+│   ├── api/                # HTTP API tests
 │   ├── conversations/      # ConversationService tests
 │   └── agents/             # AgentRuntime tests
 ├── e2e/
