@@ -74,6 +74,16 @@ describe("Conversations API", () => {
       assert.ok(res.body.error.includes("Unknown agent"));
       assert.ok(res.body.error.includes("Available:"));
     });
+
+    it("should accept optional agentVersion", async () => {
+      const res = await agent
+        .post("/api/conversations")
+        .send({ agentId: "module-writer", agentVersion: "v1.0.0" })
+        .expect(200);
+
+      assert.ok(res.body.data);
+      assert.ok(res.body.data.id);
+    });
   });
 
   describe("GET /api/conversations/:id", () => {
@@ -139,6 +149,24 @@ describe("Conversations API", () => {
       });
 
       const res = await agent.post(`/api/conversations/${created.id}/messages`).send({ content: "" }).expect(400);
+
+      assert.strictEqual(res.body.error, "Validation failed");
+      assert.ok(res.body.details.content);
+    });
+
+    it("should return 400 when content exceeds max length", async () => {
+      const created = await conversationService.create({
+        agentId: "module-writer",
+        agentVersion: "default",
+        userId: user.id,
+        provider: "openrouter",
+      });
+
+      const longContent = "x".repeat(50001);
+      const res = await agent
+        .post(`/api/conversations/${created.id}/messages`)
+        .send({ content: longContent })
+        .expect(400);
 
       assert.strictEqual(res.body.error, "Validation failed");
       assert.ok(res.body.details.content);

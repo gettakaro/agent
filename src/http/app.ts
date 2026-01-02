@@ -12,6 +12,7 @@ import { cockpitRoutes } from "./routes/cockpit.js";
 import { conversationRoutes } from "./routes/conversations.js";
 import { customAgentRoutes } from "./routes/custom-agents.js";
 import { knowledgeRoutes } from "./routes/knowledge.js";
+import { openAPIRoutes } from "./routes/openapi.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -64,6 +65,7 @@ export function createApp(): Express {
   app.use("/api/custom-agents", customAgentRoutes);
   app.use("/api/knowledge-bases", knowledgeRoutes);
   app.use("/api/cockpit", cockpitRoutes);
+  app.use("/api", openAPIRoutes);
 
   // SPA fallback - serve index.html for non-API routes (production only)
   if (clientExists) {

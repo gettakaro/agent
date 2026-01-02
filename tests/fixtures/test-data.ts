@@ -56,18 +56,50 @@ export function createMockModule(overrides: Partial<MockModuleData> = {}): MockM
   };
 }
 
+// Stub type for unused API properties
+type ApiStub = Record<string, never>;
+
+export interface MockTakaroClient {
+  module: {
+    moduleControllerGetOne: (moduleId: string) => Promise<{ data: { data: MockModuleData } }>;
+    moduleControllerCreate: (input: {
+      name: string;
+      description?: string;
+    }) => Promise<{ data: { data: Partial<MockModuleData> } }>;
+  };
+  // Stubs for all other Client properties (unused in tests)
+  item: ApiStub;
+  user: ApiStub;
+  role: ApiStub;
+  gameserver: ApiStub;
+  cronjob: ApiStub;
+  function: ApiStub;
+  hook: ApiStub;
+  command: ApiStub;
+  player: ApiStub;
+  settings: ApiStub;
+  variable: ApiStub;
+  discord: ApiStub;
+  event: ApiStub;
+  playerOnGameserver: ApiStub;
+  stats: ApiStub;
+  shopListing: ApiStub;
+  shopCategory: ApiStub;
+  shopOrder: ApiStub;
+  tracking: ApiStub;
+  entity: ApiStub;
+  analytics: ApiStub;
+}
+
 export function createMockTakaroClient(moduleData?: MockModuleData): MockTakaroClient {
+  const emptyStub = {} as ApiStub;
   return {
     module: {
       moduleControllerGetOne: async (moduleId: string) => {
         if (!moduleData) {
           throw new Error(`Module not found: ${moduleId}`);
         }
-        return {
-          data: {
-            data: moduleData,
-          },
-        };
+        return { data: { data: moduleData } };
       },
       moduleControllerCreate: async (input: { name: string; description?: string }) => {
         return {
@@ -85,7 +117,28 @@ export function createMockTakaroClient(moduleData?: MockModuleData): MockTakaroC
         };
       },
     },
-  } as MockTakaroClient;
+    item: emptyStub,
+    user: emptyStub,
+    role: emptyStub,
+    gameserver: emptyStub,
+    cronjob: emptyStub,
+    function: emptyStub,
+    hook: emptyStub,
+    command: emptyStub,
+    player: emptyStub,
+    settings: emptyStub,
+    variable: emptyStub,
+    discord: emptyStub,
+    event: emptyStub,
+    playerOnGameserver: emptyStub,
+    stats: emptyStub,
+    shopListing: emptyStub,
+    shopCategory: emptyStub,
+    shopOrder: emptyStub,
+    tracking: emptyStub,
+    entity: emptyStub,
+    analytics: emptyStub,
+  };
 }
 
 export function createMockToolContextWithClient(
@@ -94,8 +147,7 @@ export function createMockToolContextWithClient(
 ): ToolContext {
   const mockClient = createMockTakaroClient(moduleData);
   return createMockToolContext({
-    // biome-ignore lint/suspicious/noExplicitAny: Mock client doesn't need full type compliance
-    takaroClient: mockClient as any,
+    takaroClient: mockClient as MockTakaroClient,
     ...contextOverrides,
   });
 }
@@ -130,16 +182,6 @@ export interface MockModuleData {
       id: string;
       name: string;
     }>;
-  };
-}
-
-export interface MockTakaroClient {
-  module: {
-    moduleControllerGetOne: (moduleId: string) => Promise<{ data: { data: MockModuleData } }>;
-    moduleControllerCreate: (input: {
-      name: string;
-      description?: string;
-    }) => Promise<{ data: { data: Partial<MockModuleData> } }>;
   };
 }
 

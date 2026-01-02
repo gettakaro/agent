@@ -4,6 +4,8 @@ import { config } from "../../config.js";
 import { ConversationService } from "../../conversations/service.js";
 import { formatError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
+import { validate } from "../middleware/validate.js";
+import { executeCommandSchema } from "../schemas/cockpit.js";
 
 const router = Router();
 const sessionService = new CockpitSessionService();
@@ -133,34 +135,33 @@ router.get("/sessions/:sessionId/mock-server/status", async (req: AuthenticatedR
 });
 
 // Execute mock server command
-router.post("/sessions/:sessionId/mock-server/command", async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const sessionId = req.params.sessionId!;
-    const { command } = req.body;
+router.post(
+  "/sessions/:sessionId/mock-server/command",
+  validate(executeCommandSchema),
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const sessionId = req.params.sessionId!;
+      const { command } = req.body;
 
-    if (!command) {
-      res.status(400).json({ error: "command is required" });
-      return;
+      const session = await sessionService.get(sessionId);
+      if (!session) {
+        res.status(404).json({ error: "Session not found" });
+        return;
+      }
+
+      if (session.userId !== req.user!.id) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+
+      const result = await mockServerManager.sendCommand(sessionId, command);
+      res.json({ data: { result } });
+    } catch (error) {
+      console.error("Error executing mock server command:", formatError(error));
+      res.status(500).json({ error: `Failed to execute command: ${formatError(error)}` });
     }
-
-    const session = await sessionService.get(sessionId);
-    if (!session) {
-      res.status(404).json({ error: "Session not found" });
-      return;
-    }
-
-    if (session.userId !== req.user!.id) {
-      res.status(403).json({ error: "Forbidden" });
-      return;
-    }
-
-    const result = await mockServerManager.sendCommand(sessionId, command);
-    res.json({ data: { result } });
-  } catch (error) {
-    console.error("Error executing mock server command:", formatError(error));
-    res.status(500).json({ error: `Failed to execute command: ${formatError(error)}` });
-  }
-});
+  },
+);
 
 // Get players for session
 router.get("/sessions/:sessionId/players", async (req: AuthenticatedRequest, res: Response) => {
