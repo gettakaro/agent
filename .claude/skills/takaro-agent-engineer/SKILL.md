@@ -15,6 +15,7 @@ AI service for Takaro module development. Provides conversational interface wher
 | API | [API.md](API.md) | `curl http://localhost:3100/health` |
 | Agents | [AGENTS.md](AGENTS.md) | See agent/tool creation patterns |
 | Development | [DEVELOPMENT.md](DEVELOPMENT.md) | `docker compose up` |
+| Testing | [TESTING.md](TESTING.md) | `npm run test:unit` |
 
 ## Architecture
 
@@ -33,7 +34,7 @@ HTTP Request → Auth Middleware → Conversation Route → AgentRuntime → LLM
 | AgentRegistry | `src/agents/registry.ts` | Stores agent factories by ID |
 | AgentRuntime | `src/agents/AgentRuntime.ts` | Conversation loop, tool execution |
 | ConversationService | `src/conversations/service.ts` | CRUD + message storage |
-| LLM Providers | `src/agents/providers/` | OpenRouter adapter |
+| LLM Providers | `src/agents/providers/` | OpenRouter + Mock for testing |
 
 ### Agent Experiments
 

@@ -11,6 +11,8 @@ import {
 } from "../../knowledge/index.js";
 import { formatError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
+import { validateQuery } from "../middleware/validate.js";
+import { searchKnowledgeQuerySchema } from "../schemas/knowledge.js";
 
 const router = Router();
 
@@ -100,32 +102,31 @@ router.get("/:kbId", async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Search knowledge base
-router.get("/:kbId/search", async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { kbId } = req.params;
-    const { q, limit } = req.query;
+router.get(
+  "/:kbId/search",
+  validateQuery(searchKnowledgeQuerySchema),
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { kbId } = req.params;
+      const { q, limit } = req.query as unknown as { q: string; limit?: number };
 
-    if (!q || typeof q !== "string") {
-      res.status(400).json({ error: 'Query parameter "q" is required' });
-      return;
+      const factory = knowledgeRegistry.getFactory(kbId!);
+      if (!factory) {
+        res.status(404).json({ error: "Knowledge base not found" });
+        return;
+      }
+
+      const results = await vectorSearch(kbId!, q, {
+        limit: limit ?? 5,
+      });
+
+      res.json({ data: results });
+    } catch (error) {
+      console.error("Error searching knowledge base:", formatError(error));
+      res.status(500).json({ error: "Failed to search knowledge base" });
     }
-
-    const factory = knowledgeRegistry.getFactory(kbId!);
-    if (!factory) {
-      res.status(404).json({ error: "Knowledge base not found" });
-      return;
-    }
-
-    const results = await vectorSearch(kbId!, q, {
-      limit: limit ? parseInt(limit as string, 10) : 5,
-    });
-
-    res.json({ data: results });
-  } catch (error) {
-    console.error("Error searching knowledge base:", formatError(error));
-    res.status(500).json({ error: "Failed to search knowledge base" });
-  }
-});
+  },
+);
 
 // Get agents using this knowledge base
 router.get("/:kbId/agents", async (req: AuthenticatedRequest, res: Response) => {

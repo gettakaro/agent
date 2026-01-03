@@ -23,6 +23,11 @@ export function authMiddleware(options: { redirect?: boolean } = {}) {
   const shouldRedirect = options.redirect ?? true;
 
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    // Skip if user already set (e.g., by test middleware)
+    if (req.user && req.takaroClient) {
+      return next();
+    }
+
     // Service account mode (dev/testing with username/password)
     if (isServiceMode()) {
       const client = getServiceClient()!;

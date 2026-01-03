@@ -4,6 +4,8 @@ import { CustomAgentService } from "../../custom-agents/service.js";
 import { knowledgeRegistry } from "../../knowledge/registry.js";
 import { formatError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
+import { validate } from "../middleware/validate.js";
+import { createCustomAgentSchema, updateCustomAgentSchema } from "../schemas/custom-agents.js";
 
 const router = Router();
 const customAgentService = new CustomAgentService();
@@ -70,36 +72,18 @@ router.get("/:id", async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Create custom agent
-router.post("/", async (req: AuthenticatedRequest, res: Response) => {
+router.post("/", validate(createCustomAgentSchema), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { name, description, systemPrompt, tools, knowledgeBases, model, temperature, maxTokens } = req.body;
 
-    // Validation
-    if (!name || typeof name !== "string" || name.length > 100) {
-      res.status(400).json({ error: "Name is required (max 100 chars)" });
-      return;
-    }
-    if (!systemPrompt || typeof systemPrompt !== "string") {
-      res.status(400).json({ error: "System prompt is required" });
-      return;
-    }
-    if (!model || typeof model !== "string") {
-      res.status(400).json({ error: "Model is required" });
-      return;
-    }
-    if (!Array.isArray(tools)) {
-      res.status(400).json({ error: "Tools must be an array" });
-      return;
-    }
-
-    // Validate tool names
+    // Validate tool names against registry
     const invalidTools = tools.filter((t: string) => !isValidToolName(t));
     if (invalidTools.length > 0) {
       res.status(400).json({ error: `Invalid tools: ${invalidTools.join(", ")}` });
       return;
     }
 
-    // Validate KB IDs
+    // Validate KB IDs against registry
     const kbs = knowledgeBases || [];
     const invalidKbs = kbs.filter((k: string) => !knowledgeRegistry.getFactory(k));
     if (invalidKbs.length > 0) {
@@ -131,16 +115,12 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Update custom agent
-router.put("/:id", async (req: AuthenticatedRequest, res: Response) => {
+router.put("/:id", validate(updateCustomAgentSchema), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { name, description, systemPrompt, tools, knowledgeBases, model, temperature, maxTokens } = req.body;
 
-    // Validate tool names if provided
+    // Validate tool names against registry if provided
     if (tools !== undefined) {
-      if (!Array.isArray(tools)) {
-        res.status(400).json({ error: "Tools must be an array" });
-        return;
-      }
       const invalidTools = tools.filter((t: string) => !isValidToolName(t));
       if (invalidTools.length > 0) {
         res.status(400).json({ error: `Invalid tools: ${invalidTools.join(", ")}` });
@@ -148,7 +128,7 @@ router.put("/:id", async (req: AuthenticatedRequest, res: Response) => {
       }
     }
 
-    // Validate KB IDs if provided
+    // Validate KB IDs against registry if provided
     if (knowledgeBases !== undefined) {
       const invalidKbs = knowledgeBases.filter((k: string) => !knowledgeRegistry.getFactory(k));
       if (invalidKbs.length > 0) {

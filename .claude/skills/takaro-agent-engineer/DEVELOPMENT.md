@@ -39,6 +39,27 @@ npm run dev
 | `npm run db:migrate` | Run migrations |
 | `npm run db:rollback` | Rollback last batch |
 
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run unit tests only
+npm run test:unit
+
+# Run integration tests (requires Docker)
+npm run test:integration
+
+# Run single test file
+npm run test:file tests/unit/tools/getModule.test.ts
+
+# Filter by test name
+npm run test:filter "getModule"
+```
+
+See [TESTING.md](TESTING.md) for full testing documentation.
+
 ## Environment Variables
 
 ```bash

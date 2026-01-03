@@ -1,4 +1,5 @@
 import { formatError } from "../utils/formatError.js";
+import { MockLLMProvider } from "./providers/MockLLMProvider.js";
 import { OpenRouterProvider } from "./providers/OpenRouterProvider.js";
 import type { ILLMProvider } from "./providers/types.js";
 import type {
@@ -24,7 +25,13 @@ export class AgentRuntime implements IAgent {
   }
 
   private getProvider(context: ToolContext): ILLMProvider {
-    return new OpenRouterProvider(context.openrouterApiKey);
+    if (process.env.USE_MOCK_PROVIDER === "true") {
+      const mockProvider = MockLLMProvider.getInstance();
+      // Enable fallback responses for E2E tests (when no explicit responses configured)
+      mockProvider.enableFallbackResponse();
+      return mockProvider;
+    }
+    return new OpenRouterProvider(context.openrouterApiKey!);
   }
 
   async chat(

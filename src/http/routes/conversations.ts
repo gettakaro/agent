@@ -9,6 +9,8 @@ import { generateTitle } from "../../conversations/title-generator.js";
 import { CustomAgentService, createAgentFromCustom } from "../../custom-agents/index.js";
 import { formatError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
+import { validate } from "../middleware/validate.js";
+import { createConversationSchema, sendMessageSchema } from "../schemas/conversations.js";
 
 const router = Router();
 const conversationService = new ConversationService();
@@ -60,14 +62,9 @@ async function buildContext(
 }
 
 // Create conversation
-router.post("/", async (req: AuthenticatedRequest, res: Response) => {
+router.post("/", validate(createConversationSchema), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { agentId, agentVersion } = req.body;
-
-    if (!agentId) {
-      res.status(400).json({ error: "agentId is required" });
-      return;
-    }
 
     // Check if this is a custom agent
     if (agentId.startsWith("custom:")) {
@@ -190,14 +187,9 @@ router.get("/:id/messages", async (req: AuthenticatedRequest, res: Response) => 
 });
 
 // Send message (SSE streaming response)
-router.post("/:id/messages", async (req: AuthenticatedRequest, res: Response) => {
+router.post("/:id/messages", validate(sendMessageSchema), async (req: AuthenticatedRequest, res: Response) => {
   const conversationId = req.params.id!;
   const { content } = req.body;
-
-  if (!content) {
-    res.status(400).json({ error: "content is required" });
-    return;
-  }
 
   let sseStarted = false;
 
@@ -287,9 +279,11 @@ router.post("/:id/messages", async (req: AuthenticatedRequest, res: Response) =>
       const userMsg = messages.find((m) => m.role === "user")?.content || "";
       const assistantMsg = response.messages.find((m) => m.role === "assistant")?.content || "";
 
-      generateTitle(userMsg, assistantMsg, context.openrouterApiKey)
-        .then((title) => conversationService.updateTitle(conversationId, title))
-        .catch((err) => console.error("Title generation failed:", formatError(err)));
+      if (context.openrouterApiKey) {
+        generateTitle(userMsg, assistantMsg, context.openrouterApiKey)
+          .then((title) => conversationService.updateTitle(conversationId, title))
+          .catch((err) => console.error("Title generation failed:", formatError(err)));
+      }
     }
 
     res.end();
