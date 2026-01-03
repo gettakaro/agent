@@ -279,9 +279,11 @@ router.post("/:id/messages", validate(sendMessageSchema), async (req: Authentica
       const userMsg = messages.find((m) => m.role === "user")?.content || "";
       const assistantMsg = response.messages.find((m) => m.role === "assistant")?.content || "";
 
-      generateTitle(userMsg, assistantMsg, context.openrouterApiKey)
-        .then((title) => conversationService.updateTitle(conversationId, title))
-        .catch((err) => console.error("Title generation failed:", formatError(err)));
+      if (context.openrouterApiKey) {
+        generateTitle(userMsg, assistantMsg, context.openrouterApiKey)
+          .then((title) => conversationService.updateTitle(conversationId, title))
+          .catch((err) => console.error("Title generation failed:", formatError(err)));
+      }
     }
 
     res.end();

@@ -31,7 +31,7 @@ export class AgentRuntime implements IAgent {
       mockProvider.enableFallbackResponse();
       return mockProvider;
     }
-    return new OpenRouterProvider(context.openrouterApiKey);
+    return new OpenRouterProvider(context.openrouterApiKey!);
   }
 
   async chat(

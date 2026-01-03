@@ -1,11 +1,15 @@
 import { z } from "zod";
 
+const useMockProvider = process.env.USE_MOCK_PROVIDER === "true";
+
 const configSchema = z.object({
   port: z.coerce.number().default(3100),
   databaseUrl: z.string().url(),
   redisUrl: z.string().url().default("redis://localhost:6379"),
-  // Required - server-wide OpenRouter API key
-  openrouterApiKey: z.string().min(1, "OPENROUTER_API_KEY environment variable is required"),
+  // Required unless USE_MOCK_PROVIDER=true (mock provider doesn't need OpenRouter)
+  openrouterApiKey: useMockProvider
+    ? z.string().optional()
+    : z.string().min(1, "OPENROUTER_API_KEY environment variable is required"),
   takaroApiUrl: z.string().url().default("https://api.takaro.io"),
   takaroLoginUrl: z.string().url().default("https://dashboard.takaro.io/login"),
   corsOrigins: z
