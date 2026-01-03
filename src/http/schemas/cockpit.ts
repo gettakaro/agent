@@ -8,3 +8,12 @@ export const executeCommandSchema = registry.register(
 );
 
 export type ExecuteCommandInput = z.infer<typeof executeCommandSchema>;
+
+export const selectPlayerSchema = registry.register(
+  "SelectPlayer",
+  z.object({
+    playerId: z.string().nullable().optional().openapi({ description: "Player ID to select, or null to deselect" }),
+  }),
+);
+
+export type SelectPlayerInput = z.infer<typeof selectPlayerSchema>;

@@ -5,7 +5,7 @@ import { ConversationService } from "../../conversations/service.js";
 import { formatError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
-import { executeCommandSchema } from "../schemas/cockpit.js";
+import { executeCommandSchema, selectPlayerSchema } from "../schemas/cockpit.js";
 
 const router = Router();
 const sessionService = new CockpitSessionService();
@@ -199,30 +199,34 @@ router.get("/sessions/:sessionId/players", async (req: AuthenticatedRequest, res
 });
 
 // Select player for testing
-router.post("/sessions/:sessionId/select-player", async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const sessionId = req.params.sessionId!;
-    const { playerId } = req.body;
+router.post(
+  "/sessions/:sessionId/select-player",
+  validate(selectPlayerSchema),
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const sessionId = req.params.sessionId!;
+      const { playerId } = req.body;
 
-    const session = await sessionService.get(sessionId);
-    if (!session) {
-      res.status(404).json({ error: "Session not found" });
-      return;
+      const session = await sessionService.get(sessionId);
+      if (!session) {
+        res.status(404).json({ error: "Session not found" });
+        return;
+      }
+
+      if (session.userId !== req.user!.id) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+
+      await sessionService.updateSelectedPlayer(sessionId, playerId || null);
+
+      res.json({ data: { selectedPlayerId: playerId } });
+    } catch (error) {
+      console.error("Error selecting player:", formatError(error));
+      res.status(500).json({ error: "Failed to select player" });
     }
-
-    if (session.userId !== req.user!.id) {
-      res.status(403).json({ error: "Forbidden" });
-      return;
-    }
-
-    await sessionService.updateSelectedPlayer(sessionId, playerId || null);
-
-    res.json({ data: { selectedPlayerId: playerId } });
-  } catch (error) {
-    console.error("Error selecting player:", formatError(error));
-    res.status(500).json({ error: "Failed to select player" });
-  }
-});
+  },
+);
 
 // SSE event stream
 router.get("/sessions/:sessionId/events", async (req: AuthenticatedRequest, res: Response) => {
