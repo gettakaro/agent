@@ -1,3 +1,4 @@
+import type { Client } from "@takaro/apiclient";
 import type { ToolContext, ToolDefinition, ToolResult, AgentVersionConfig } from "../../src/agents/types.js";
 
 export function createMockToolContext(overrides: Partial<ToolContext> = {}): ToolContext {
@@ -147,7 +148,8 @@ export function createMockToolContextWithClient(
 ): ToolContext {
   const mockClient = createMockTakaroClient(moduleData);
   return createMockToolContext({
-    takaroClient: mockClient as MockTakaroClient,
+    // Cast to Client - MockTakaroClient is a partial mock with only module methods implemented
+    takaroClient: mockClient as unknown as Client,
     ...contextOverrides,
   });
 }

@@ -174,7 +174,7 @@ Key helpers:
 
 ## Test Directory Structure
 
-```
+```text
 playwright.config.ts            # Playwright config (project root)
 tests/
 ├── helpers/
