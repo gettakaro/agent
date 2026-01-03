@@ -17,7 +17,7 @@ router.get("/api.html", (_req: Request, res: Response) => {
   </head>
   <body>
     <rapi-doc
-      spec-url="/api/openapi.json"
+      spec-url="/openapi.json"
       render-style="read"
       fill-request-fields-with-example="false"
       persist-auth="true"

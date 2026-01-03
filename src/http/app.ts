@@ -65,13 +65,19 @@ export function createApp(): Express {
   app.use("/api/custom-agents", customAgentRoutes);
   app.use("/api/knowledge-bases", knowledgeRoutes);
   app.use("/api/cockpit", cockpitRoutes);
-  app.use("/api", openAPIRoutes);
+  app.use(openAPIRoutes); // Mount at root for /api.html and /openapi.json
 
   // SPA fallback - serve index.html for non-API routes (production only)
   if (clientExists) {
     app.get("*", (req: Request, res: Response, next: NextFunction) => {
-      // Skip API and auth routes (they should 404 normally)
-      if (req.path.startsWith("/api") || req.path.startsWith("/auth") || req.path === "/health") {
+      // Skip API, auth, and doc routes (they should 404 normally)
+      if (
+        req.path.startsWith("/api") ||
+        req.path.startsWith("/auth") ||
+        req.path === "/health" ||
+        req.path === "/api.html" ||
+        req.path === "/openapi.json"
+      ) {
         return next();
       }
       res.sendFile(path.join(clientPath, "index.html"));
