@@ -39,12 +39,6 @@ Server uses `OPENROUTER_API_KEY` environment variable (required at startup).
 
 ## Endpoints
 
-### OpenAPI (`/api`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/openapi.json` | OpenAPI 3.0.3 specification (component schemas only) |
-
 ### Auth (`/auth`)
 
 | Method | Endpoint | Description |

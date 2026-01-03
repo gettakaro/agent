@@ -12,7 +12,6 @@ import { cockpitRoutes } from "./routes/cockpit.js";
 import { conversationRoutes } from "./routes/conversations.js";
 import { customAgentRoutes } from "./routes/custom-agents.js";
 import { knowledgeRoutes } from "./routes/knowledge.js";
-import { openAPIRoutes } from "./routes/openapi.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -65,19 +64,12 @@ export function createApp(): Express {
   app.use("/api/custom-agents", customAgentRoutes);
   app.use("/api/knowledge-bases", knowledgeRoutes);
   app.use("/api/cockpit", cockpitRoutes);
-  app.use(openAPIRoutes); // Mount at root for /api.html and /openapi.json
 
   // SPA fallback - serve index.html for non-API routes (production only)
   if (clientExists) {
     app.get("*", (req: Request, res: Response, next: NextFunction) => {
-      // Skip API, auth, and doc routes (they should 404 normally)
-      if (
-        req.path.startsWith("/api") ||
-        req.path.startsWith("/auth") ||
-        req.path === "/health" ||
-        req.path === "/api.html" ||
-        req.path === "/openapi.json"
-      ) {
+      // Skip API and auth routes (they should 404 normally)
+      if (req.path.startsWith("/api") || req.path.startsWith("/auth") || req.path === "/health") {
         return next();
       }
       res.sendFile(path.join(clientPath, "index.html"));

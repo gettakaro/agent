@@ -1,19 +1,13 @@
-import { registry, z } from "../openapi/registry.js";
+import { z } from "zod";
 
-export const executeCommandSchema = registry.register(
-  "ExecuteCommand",
-  z.object({
-    command: z.string().min(1, "command is required").openapi({ description: "Command to execute on mock server" }),
-  }),
-);
+export const executeCommandSchema = z.object({
+  command: z.string().min(1, "command is required"),
+});
 
 export type ExecuteCommandInput = z.infer<typeof executeCommandSchema>;
 
-export const selectPlayerSchema = registry.register(
-  "SelectPlayer",
-  z.object({
-    playerId: z.string().nullable().optional().openapi({ description: "Player ID to select, or null to deselect" }),
-  }),
-);
+export const selectPlayerSchema = z.object({
+  playerId: z.string().nullable().optional(),
+});
 
 export type SelectPlayerInput = z.infer<typeof selectPlayerSchema>;

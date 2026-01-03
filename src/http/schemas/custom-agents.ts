@@ -1,33 +1,27 @@
-import { registry, z } from "../openapi/registry.js";
+import { z } from "zod";
 
-export const createCustomAgentSchema = registry.register(
-  "CreateCustomAgent",
-  z.object({
-    name: z.string().min(1).max(100).openapi({ description: "Agent name (max 100 chars)" }),
-    description: z.string().optional().openapi({ description: "Agent description" }),
-    systemPrompt: z.string().min(1).openapi({ description: "System prompt for the agent" }),
-    tools: z.array(z.string()).openapi({ description: "List of tool names to enable" }),
-    knowledgeBases: z.array(z.string()).optional().openapi({ description: "List of knowledge base IDs" }),
-    model: z.string().min(1).openapi({ description: "LLM model identifier" }),
-    temperature: z.number().min(0).max(2).optional().openapi({ description: "Temperature (0-2)", default: 0.7 }),
-    maxTokens: z.number().positive().optional().openapi({ description: "Max tokens", default: 8192 }),
-  }),
-);
+export const createCustomAgentSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().optional(),
+  systemPrompt: z.string().min(1),
+  tools: z.array(z.string()),
+  knowledgeBases: z.array(z.string()).optional(),
+  model: z.string().min(1),
+  temperature: z.number().min(0).max(2).optional(),
+  maxTokens: z.number().positive().optional(),
+});
 
 export type CreateCustomAgentInput = z.infer<typeof createCustomAgentSchema>;
 
-export const updateCustomAgentSchema = registry.register(
-  "UpdateCustomAgent",
-  z.object({
-    name: z.string().max(100).optional().openapi({ description: "Agent name (max 100 chars)" }),
-    description: z.string().optional().openapi({ description: "Agent description" }),
-    systemPrompt: z.string().optional().openapi({ description: "System prompt for the agent" }),
-    tools: z.array(z.string()).optional().openapi({ description: "List of tool names to enable" }),
-    knowledgeBases: z.array(z.string()).optional().openapi({ description: "List of knowledge base IDs" }),
-    model: z.string().optional().openapi({ description: "LLM model identifier" }),
-    temperature: z.number().min(0).max(2).optional().openapi({ description: "Temperature (0-2)" }),
-    maxTokens: z.number().positive().optional().openapi({ description: "Max tokens" }),
-  }),
-);
+export const updateCustomAgentSchema = z.object({
+  name: z.string().max(100).optional(),
+  description: z.string().optional(),
+  systemPrompt: z.string().optional(),
+  tools: z.array(z.string()).optional(),
+  knowledgeBases: z.array(z.string()).optional(),
+  model: z.string().optional(),
+  temperature: z.number().min(0).max(2).optional(),
+  maxTokens: z.number().positive().optional(),
+});
 
 export type UpdateCustomAgentInput = z.infer<typeof updateCustomAgentSchema>;

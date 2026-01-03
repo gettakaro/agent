@@ -23,7 +23,6 @@
     "test:filter": "USE_MOCK_PROVIDER=true node --import tsx --test --test-name-pattern"
   },
   "dependencies": {
-    "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@takaro/apiclient": "next",
     "@takaro/config": "next",
     "@takaro/db": "next",

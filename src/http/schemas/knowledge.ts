@@ -1,11 +1,8 @@
-import { registry, z } from "../openapi/registry.js";
+import { z } from "zod";
 
-export const searchKnowledgeQuerySchema = registry.register(
-  "SearchKnowledgeQuery",
-  z.object({
-    q: z.string().min(1, "Query parameter 'q' is required").openapi({ description: "Search query" }),
-    limit: z.coerce.number().positive().optional().openapi({ description: "Max results to return", default: 5 }),
-  }),
-);
+export const searchKnowledgeQuerySchema = z.object({
+  q: z.string().min(1, "Query parameter 'q' is required"),
+  limit: z.coerce.number().positive().optional(),
+});
 
 export type SearchKnowledgeQuery = z.infer<typeof searchKnowledgeQuerySchema>;
