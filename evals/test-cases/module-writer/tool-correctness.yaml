@@ -1,0 +1,157 @@
+# Tool Correctness Tests for Module Writer Agent
+#
+# PURPOSE: These tests verify the agent selects and executes the correct tools
+# for specific user prompts. They focus on deterministic assertions:
+# - Was the right tool called?
+# - Did the tool execution succeed?
+# - Does the response indicate success?
+#
+# STRUCTURE: Each test case uses:
+# - {{__id}}: Unique ID per test run to avoid name conflicts
+# - metadata.toolCalls: Array of {name, input} for tools the agent called
+# - metadata.toolResults: Array of {name, success, output/error} for execution results
+#
+# DEBUGGING: If a test fails, check the SSE stream output or retrieve the full
+# conversation via: curl http://localhost:3100/api/conversations/{conversationId}/messages
+
+- description: "TC-001: Create a module"
+  metadata:
+    ci: true
+  vars:
+    # Use {{__id}} to generate unique module names per run (prevents conflicts)
+    prompt: "Create a module called EvalTestModule_{{__id}}"
+  assert:
+    # ASSERTION 1: Verify the agent called the 'createModule' tool
+    # This checks tool selection correctness (structural validation)
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'createModule');
+
+    # ASSERTION 2: Verify the tool execution succeeded
+    # This checks that the Takaro API call completed without errors
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolResults = metadata.toolResults || [];
+        return toolResults.some(t => t.name === 'createModule' && t.success === true);
+
+    # ASSERTION 3: Verify the response text confirms creation
+    # This checks the agent's natural language response (case-insensitive)
+    - type: icontains
+      value: "created"
+
+- description: "TC-002: Add a command"
+  metadata:
+    ci: true
+  vars:
+    prompt: "Add a /hello command"
+  assert:
+    # ASSERTION 1: Verify the agent called the 'addCommand' tool
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'addCommand');
+
+    # ASSERTION 2: Verify the tool called with trigger="/hello"
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        const addCommandCall = toolCalls.find(t => t.name === 'addCommand');
+        return addCommandCall && addCommandCall.input.trigger === '/hello';
+
+    # ASSERTION 3: Verify the tool execution succeeded
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolResults = metadata.toolResults || [];
+        return toolResults.some(t => t.name === 'addCommand' && t.success === true);
+
+- description: "TC-003: Create a hook for player join"
+  vars:
+    prompt: "Create a hook for player join"
+  assert:
+    # ASSERTION 1: Verify the agent called the 'addHook' tool
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'addHook');
+
+    # ASSERTION 2: Verify the hook eventType contains "player" (player-connected)
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        const addHookCall = toolCalls.find(t => t.name === 'addHook');
+        return addHookCall &&
+               addHookCall.input.eventType &&
+               addHookCall.input.eventType.toLowerCase().includes('player');
+
+    # ASSERTION 3: Verify the tool execution succeeded
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolResults = metadata.toolResults || [];
+        return toolResults.some(t => t.name === 'addHook' && t.success === true);
+
+- description: "TC-004: Schedule a cron every 5 minutes"
+  vars:
+    prompt: "Schedule a cron every 5 minutes"
+  assert:
+    # ASSERTION 1: Verify the agent called the 'addCronJob' tool
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'addCronJob');
+
+    # ASSERTION 2: Verify the cron expression is valid for 5 minutes
+    # Valid patterns: */5 * * * * or 0 */5 * * *
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        const addCronCall = toolCalls.find(t => t.name === 'addCronJob');
+        if (!addCronCall || !addCronCall.input.temporalValue) return false;
+        const cronExpr = addCronCall.input.temporalValue;
+        // Accept variations like "*/5 * * * *" or "0 */5 * * *"
+        return cronExpr.includes('*/5') || cronExpr.includes('/5');
+
+    # ASSERTION 3: Verify the tool execution succeeded
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolResults = metadata.toolResults || [];
+        return toolResults.some(t => t.name === 'addCronJob' && t.success === true);
+
+- description: "TC-005: Show my modules"
+  metadata:
+    ci: true
+  vars:
+    prompt: "Show my modules"
+  assert:
+    # ASSERTION 1: Verify the agent called the 'listModuleDefinitions' tool
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'listModuleDefinitions');
+
+    # ASSERTION 2: Verify the tool execution succeeded
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolResults = metadata.toolResults || [];
+        return toolResults.some(t => t.name === 'listModuleDefinitions' && t.success === true);
+
+    # ASSERTION 3: Verify response contains information about modules
+    # (Should mention modules, or say "no modules" if none exist)
+    - type: javascript
+      value: |
+        const output = context.providerResponse?.output || '';
+        return output.toLowerCase().includes('module');
+

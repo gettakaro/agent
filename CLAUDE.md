@@ -25,6 +25,14 @@ npm run typecheck              # Type check without emitting
 npm run lint                   # Check with Biome
 npm run lint:fix               # Auto-fix lint issues
 
+# Agent Evaluation (PromptFoo)
+# Prerequisites: Server must be running (npm run dev or docker compose up)
+# WARNING: Evals execute against the running server and create test data in the database
+npm run eval                   # Run full evaluation suite
+npm run eval:view              # View previous results in web UI
+npm run eval:ci                # Run CI subset (critical tests only)
+npm run eval -- --filter-pattern "Create"  # Run specific test category (e.g., "Create", "TC-001", "welcome")
+
 # Production Docker image
 docker build -t takaro-agent . # Build production image (uses Dockerfile)
 ```

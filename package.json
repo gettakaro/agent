@@ -20,7 +20,10 @@
     "test:integration": "USE_MOCK_PROVIDER=true node --import tsx --test --test-concurrency=1 'tests/integration/**/*.test.ts'",
     "test:e2e": "USE_MOCK_PROVIDER=true playwright test",
     "test:file": "USE_MOCK_PROVIDER=true node --import tsx --test",
-    "test:filter": "USE_MOCK_PROVIDER=true node --import tsx --test --test-name-pattern"
+    "test:filter": "USE_MOCK_PROVIDER=true node --import tsx --test --test-name-pattern",
+    "eval": "promptfoo eval -c evals/promptfooconfig.yaml",
+    "eval:view": "promptfoo view",
+    "eval:ci": "promptfoo eval -c evals/promptfooconfig.yaml --filter-metadata ci=true"
   },
   "dependencies": {
     "@takaro/apiclient": "next",
@@ -55,6 +58,7 @@
     "@types/node": "^22.10.2",
     "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
+    "promptfoo": "^0.120.8",
     "supertest": "^7.1.4",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2"

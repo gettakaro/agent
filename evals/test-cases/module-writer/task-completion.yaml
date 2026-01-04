@@ -1,0 +1,199 @@
+# Task Completion Tests for Module Writer Agent
+#
+# PURPOSE: These tests verify the agent can complete end-to-end workflows that
+# require multiple tool calls and complex reasoning. Unlike tool-correctness tests
+# that verify single tool selection, these tests validate:
+# - Multi-step task completion (e.g., createModule + addHook + addFunction)
+# - Semantic quality of responses (using LLM-as-judge)
+# - Integration between different tools
+#
+# STRUCTURE: Each test case uses:
+# - Complex prompts requiring multiple tools
+# - Structural assertions (checking tool sequence)
+# - Semantic assertions (llm-rubric for response quality)
+# - metadata.toolCalls: Array of all tools the agent called
+# - metadata.toolResults: Array of execution results
+#
+# DEBUGGING: For failures, retrieve the full conversation to see tool execution:
+# curl http://localhost:3100/api/conversations/{conversationId}/messages
+
+- description: "TC-101: Build a welcome module that greets players when they join"
+  vars:
+    prompt: "Build a welcome module that greets players when they join"
+  assert:
+    # ASSERTION 1: Verify agent created a module
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'createModule');
+
+    # ASSERTION 2: Verify agent added a hook for player connection
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        const hookCall = toolCalls.find(t => t.name === 'addHook');
+        if (!hookCall) return false;
+
+        // Check that hook is for player-connected or similar event
+        const eventType = hookCall.input.eventType || '';
+        return eventType.toLowerCase().includes('player') ||
+               eventType.toLowerCase().includes('connect');
+
+    # ASSERTION 3: Verify agent added a function for greeting logic
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'addFunction');
+
+    # ASSERTION 4: Verify all tool executions succeeded
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolResults = metadata.toolResults || [];
+        const relevantTools = ['createModule', 'addHook', 'addFunction'];
+
+        for (const toolName of relevantTools) {
+          const result = toolResults.find(r => r.name === toolName);
+          if (!result || !result.success) return false;
+        }
+        return true;
+
+    # ASSERTION 5: Semantic quality check using LLM-as-judge
+    # This validates that the response confirms module creation with working hook
+    - type: llm-rubric
+      value: |
+        The response should confirm that:
+        1. A welcome module was created
+        2. A hook was added that triggers when players join/connect
+        3. A function was created to handle the greeting logic
+        4. The module is ready to greet players
+
+        The response should NOT:
+        - Be vague about what was created
+        - Skip mentioning the hook or function
+        - Indicate any errors or failures
+
+- description: "TC-102: Create economy module with /balance and /pay commands"
+  vars:
+    prompt: "Create economy module with /balance and /pay commands"
+  assert:
+    # ASSERTION 1: Verify agent created a module
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'createModule');
+
+    # ASSERTION 2: Verify agent added two commands
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        const commandCalls = toolCalls.filter(t => t.name === 'addCommand');
+
+        if (commandCalls.length < 2) return false;
+
+        // Check that one command is for /balance and one for /pay
+        const triggers = commandCalls.map(c => c.input.trigger || '').map(t => t.toLowerCase());
+        const hasBalance = triggers.some(t => t.includes('balance'));
+        const hasPay = triggers.some(t => t.includes('pay'));
+
+        return hasBalance && hasPay;
+
+    # ASSERTION 3: Verify agent added function(s) for command logic
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'addFunction');
+
+    # ASSERTION 4: Verify all tool executions succeeded
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolResults = metadata.toolResults || [];
+
+        // All createModule, addCommand, and addFunction calls should succeed
+        const failedTools = toolResults.filter(r => !r.success);
+        return failedTools.length === 0;
+
+    # ASSERTION 5: Semantic quality check
+    - type: llm-rubric
+      value: |
+        The response should confirm that:
+        1. An economy module was created
+        2. A /balance command was added (allows players to check their balance)
+        3. A /pay command was added (allows players to send money to others)
+        4. Function(s) were created to handle the economy logic
+        5. Both commands have working triggers
+
+        The response should NOT:
+        - Only create one of the two commands
+        - Be unclear about what the commands do
+        - Indicate incomplete implementation
+
+- description: "TC-103: Set up auto-restart cron every 6 hours"
+  vars:
+    prompt: "Set up auto-restart cron every 6 hours"
+  assert:
+    # ASSERTION 1: Verify agent created a module
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'createModule');
+
+    # ASSERTION 2: Verify agent added a cron job with correct schedule
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        const cronCall = toolCalls.find(t => t.name === 'addCronJob');
+
+        if (!cronCall) return false;
+
+        const cronExpr = cronCall.input.temporalValue || '';
+        // Valid patterns for "every 6 hours":
+        // - "0 */6 * * *" (standard)
+        // - "0 0,6,12,18 * * *" (explicit hours)
+        // - "0 0/6 * * *" (alternative syntax)
+        return cronExpr.includes('*/6') ||
+               cronExpr.includes('/6') ||
+               cronExpr.includes('0,6,12,18');
+
+    # ASSERTION 3: Verify agent added a function for restart logic
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolCalls = metadata.toolCalls || [];
+        return toolCalls.some(t => t.name === 'addFunction');
+
+    # ASSERTION 4: Verify all tool executions succeeded
+    - type: javascript
+      value: |
+        const metadata = context.providerResponse?.metadata || {};
+        const toolResults = metadata.toolResults || [];
+        const relevantTools = ['createModule', 'addCronJob', 'addFunction'];
+
+        for (const toolName of relevantTools) {
+          const result = toolResults.find(r => r.name === toolName);
+          if (!result || !result.success) return false;
+        }
+        return true;
+
+    # ASSERTION 5: Semantic quality check
+    - type: llm-rubric
+      value: |
+        The response should confirm that:
+        1. A module was created (for auto-restart functionality)
+        2. A cron job was added that runs every 6 hours
+        3. A function was created to handle the restart logic
+        4. The cron schedule is correctly set (e.g., "0 */6 * * *")
+
+        The response should NOT:
+        - Use wrong cron schedule (not every 6 hours)
+        - Skip creating the function
+        - Be vague about when the restart will occur

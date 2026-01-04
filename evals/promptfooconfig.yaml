@@ -1,0 +1,28 @@
+description: "Takaro Agent Evaluation Suite"
+
+providers:
+  - id: file://providers/takaro-agent.ts
+    config:
+      baseUrl: http://localhost:3100
+      agentId: module-writer
+
+prompts:
+  - "{{prompt}}"
+
+tests:
+  - file://test-cases/module-writer/tool-correctness.yaml
+  - file://test-cases/module-writer/task-completion.yaml
+
+# Default settings
+defaultTest:
+  options:
+    timeout: 120000  # 2 minutes per test (LLM API calls and tool execution may take time)
+  assert:
+    # Latency assertion: Fail if response takes longer than 2 minutes
+    - type: latency
+      threshold: 120000  # 120 seconds
+
+    # Cost assertion: Alert if token usage exceeds threshold
+    # This helps track unexpected increases in LLM costs
+    - type: cost
+      threshold: 0.10  # $0.10 per test case (adjust based on model pricing)

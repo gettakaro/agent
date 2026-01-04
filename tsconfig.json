@@ -20,6 +20,6 @@
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "evals/**/*"],
   "exclude": ["node_modules", "dist"]
 }

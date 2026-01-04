@@ -12,6 +12,9 @@ Testing framework with mock LLM provider for free, fast, deterministic tests. Th
 | `npm run test:e2e` | Run Playwright E2E tests |
 | `npm run test:file <path>` | Run a single test file |
 | `npm run test:filter <pattern>` | Filter tests by name pattern |
+| `npm run eval` | Run agent evaluations (PromptFoo) |
+| `npm run eval:view` | View previous eval results in web UI |
+| `npm run eval:ci` | Run CI subset of evaluations |
 
 ## Mock Provider
 
@@ -85,6 +88,39 @@ npx playwright test conversation-flow
 ```
 
 E2E tests run against the frontend (`packages/web-agent/`) with backend using mock provider.
+
+## Agent Evaluations (PromptFoo)
+
+Location: `evals/`
+
+```bash
+# Run full evaluation suite (requires running server)
+npm run eval
+
+# View previous results in web UI
+npm run eval:view
+
+# Run CI subset (critical tests only)
+npm run eval:ci
+
+# Run specific test category
+npm run eval -- --filter-pattern "Create"
+```
+
+Agent evals test end-to-end behavior against a **running server** with **real LLM provider**. Unlike unit/integration tests that use MockLLMProvider, evals execute actual agent workflows to measure:
+- Tool selection correctness
+- Task completion quality
+- Response accuracy
+- Token usage and latency
+
+Prerequisites:
+- Server must be running (`npm run dev` or `docker compose up`)
+- Valid Takaro API credentials (TAKARO_USERNAME, TAKARO_PASSWORD)
+- OpenRouter API key (OPENROUTER_API_KEY)
+
+**WARNING:** Evals create real test data in the database. Use a development environment, not production.
+
+See `evals/README.md` for detailed documentation on writing test cases and debugging.
 
 ## Writing Tests
 
