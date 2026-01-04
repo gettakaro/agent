@@ -7,8 +7,10 @@ import {
   getLastSyncTime,
   getSyncQueue,
   knowledgeRegistry,
+  retrieve,
   vectorSearch,
 } from "../../knowledge/index.js";
+import type { Thoroughness } from "../../knowledge/retrieval/types.js";
 import { formatError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 import { validateQuery } from "../middleware/validate.js";
@@ -108,7 +110,11 @@ router.get(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { kbId } = req.params;
-      const { q, limit } = req.query as unknown as { q: string; limit?: number };
+      const { q, limit, thoroughness } = req.query as unknown as {
+        q: string;
+        limit?: number;
+        thoroughness?: Thoroughness;
+      };
 
       const factory = knowledgeRegistry.getFactory(kbId!);
       if (!factory) {
@@ -116,11 +122,20 @@ router.get(
         return;
       }
 
-      const results = await vectorSearch(kbId!, q, {
+      // Use retrieve function with thoroughness (defaults to 'balanced' if not specified)
+      const startTime = Date.now();
+      const response = await retrieve(kbId!, q, {
+        thoroughness: thoroughness ?? "balanced",
         limit: limit ?? 5,
       });
 
-      res.json({ data: results });
+      res.json({
+        data: {
+          results: response.results,
+          thoroughness: response.thoroughness,
+          latencyMs: response.latencyMs,
+        },
+      });
     } catch (error) {
       console.error("Error searching knowledge base:", formatError(error));
       res.status(500).json({ error: "Failed to search knowledge base" });

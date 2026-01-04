@@ -1,5 +1,17 @@
 // Types
 
+// Compatibility exports - maintain old API while using new data layer
+export { upsertDocuments, vectorSearch } from "./compat.js";
+// Data layer
+export {
+  deleteByKnowledgeBase,
+  deleteBySourceFile,
+  getDocumentCount,
+  insertChunks,
+  keywordSearch,
+  vectorSearch as rawVectorSearch,
+} from "./data/index.js";
+export type { ChunkInsert, EmbeddingChunk, KeywordSearchResult, VectorSearchResult } from "./data/types.js";
 // Embeddings
 export {
   generateEmbedding,
@@ -37,6 +49,9 @@ export {
 } from "./jobs/index.js";
 // Registry
 export { knowledgeRegistry, type ResolvedKnowledgeBase } from "./registry.js";
+// Retrieval layer - hybrid search with RRF fusion
+export { retrieve } from "./retrieval/index.js";
+export type { RetrievalOptions, RetrievalResponse, RetrievalResult, Thoroughness } from "./retrieval/types.js";
 export type {
   Document,
   IKnowledgeBaseFactory,
@@ -46,11 +61,3 @@ export type {
   SearchOptions,
   SearchResult,
 } from "./types.js";
-// Vector store
-export {
-  deleteByKnowledgeBase,
-  deleteBySourceFile,
-  getDocumentCount,
-  upsertDocuments,
-  vectorSearch,
-} from "./vectorStore.js";
