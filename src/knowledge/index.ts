@@ -50,8 +50,12 @@ export {
 // Registry
 export { knowledgeRegistry, type ResolvedKnowledgeBase } from "./registry.js";
 // Retrieval layer - hybrid search with RRF fusion
-export { retrieve } from "./retrieval/index.js";
+export { retrieve, researchTopic } from "./retrieval/index.js";
 export type { RetrievalOptions, RetrievalResponse, RetrievalResult, Thoroughness } from "./retrieval/types.js";
+export type { ResearchOptions, ResearchResult } from "./retrieval/agentic.js";
+// Tools - agent tool factories
+export { createResearchTopicTool, createSearchDocsTool } from "./tools/index.js";
+export type { ResearchTopicOptions, SearchDocsOptions } from "./tools/index.js";
 export type {
   Document,
   IKnowledgeBaseFactory,
