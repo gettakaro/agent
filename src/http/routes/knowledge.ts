@@ -8,7 +8,6 @@ import {
   getSyncQueue,
   knowledgeRegistry,
   retrieve,
-  vectorSearch,
 } from "../../knowledge/index.js";
 import type { Thoroughness } from "../../knowledge/retrieval/types.js";
 import { formatError } from "../../utils/formatError.js";
@@ -123,7 +122,7 @@ router.get(
       }
 
       // Use retrieve function with thoroughness (defaults to 'balanced' if not specified)
-      const startTime = Date.now();
+      const _startTime = Date.now();
       const response = await retrieve(kbId!, q, {
         thoroughness: thoroughness ?? "balanced",
         limit: limit ?? 5,

@@ -1,7 +1,7 @@
 import OpenAI from "openai";
-import type { RetrievalResult } from "./types.js";
-import { retrieve } from "./index.js";
 import { config } from "../../config.js";
+import { retrieve } from "./index.js";
+import type { RetrievalResult } from "./types.js";
 
 /**
  * Agentic multi-step retrieval that breaks down complex topics
@@ -76,7 +76,7 @@ Respond in JSON format:
       throw new Error("Invalid sub-queries format");
     }
     return subQueries.slice(0, 4); // Limit to 4 sub-queries
-  } catch (error) {
+  } catch (_error) {
     console.error("Failed to parse sub-queries:", content);
     // Fallback: use the original topic as single query
     return [{ query: topic, reasoning: "Original topic query" }];
@@ -145,9 +145,7 @@ export async function researchTopic(
     const newResults = searchResults.flatMap((r) => r.results);
     allFindings = deduplicateResults([...allFindings, ...newResults]);
 
-    console.log(
-      `[AgenticResearch] After iteration ${iteration + 1}: ${allFindings.length} unique findings`,
-    );
+    console.log(`[AgenticResearch] After iteration ${iteration + 1}: ${allFindings.length} unique findings`);
 
     // Check if we have enough results
     if (allFindings.length >= minResults) {

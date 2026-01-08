@@ -29,6 +29,13 @@ export async function rerank(
   if (candidates.length === 0) return [];
   if (candidates.length <= topK) return candidates; // No need to rerank if we have fewer candidates
 
+  // Guard against missing API key
+  if (!config.openrouterApiKey) {
+    throw new Error(
+      "OpenRouter API key is required for reranking. Set OPENROUTER_API_KEY environment variable or disable reranking.",
+    );
+  }
+
   const client = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey: config.openrouterApiKey,

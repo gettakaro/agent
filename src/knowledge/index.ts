@@ -49,13 +49,13 @@ export {
 } from "./jobs/index.js";
 // Registry
 export { knowledgeRegistry, type ResolvedKnowledgeBase } from "./registry.js";
-// Retrieval layer - hybrid search with RRF fusion
-export { retrieve, researchTopic } from "./retrieval/index.js";
-export type { RetrievalOptions, RetrievalResponse, RetrievalResult, Thoroughness } from "./retrieval/types.js";
 export type { ResearchOptions, ResearchResult } from "./retrieval/agentic.js";
+// Retrieval layer - hybrid search with RRF fusion
+export { researchTopic, retrieve } from "./retrieval/index.js";
+export type { RetrievalOptions, RetrievalResponse, RetrievalResult, Thoroughness } from "./retrieval/types.js";
+export type { ResearchTopicOptions, SearchDocsOptions } from "./tools/index.js";
 // Tools - agent tool factories
 export { createResearchTopicTool, createSearchDocsTool } from "./tools/index.js";
-export type { ResearchTopicOptions, SearchDocsOptions } from "./tools/index.js";
 export type {
   Document,
   IKnowledgeBaseFactory,

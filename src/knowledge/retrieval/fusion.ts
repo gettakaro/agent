@@ -6,8 +6,6 @@
  * (Cormack, Clarke, and Buettcher, SIGIR 2009)
  */
 
-import type { RankedItem, RetrievalResult } from "./types.js";
-
 /**
  * RRF constant k value.
  * Research shows k=60 performs well across datasets.

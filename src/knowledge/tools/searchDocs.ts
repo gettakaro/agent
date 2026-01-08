@@ -25,7 +25,7 @@ export interface SearchDocsOptions {
 export function createSearchDocsTool(options: SearchDocsOptions): ToolDefinition {
   const { knowledgeBaseId, knowledgeBaseName, description, defaultThoroughness = "balanced" } = options;
 
-  const toolDescription = "Search the " + knowledgeBaseName + ". " + description;
+  const toolDescription = `Search the ${knowledgeBaseName}. ${description}`;
 
   return {
     name: "searchDocs",
@@ -74,7 +74,7 @@ export function createSearchDocsTool(options: SearchDocsOptions): ToolDefinition
           return {
             success: true,
             output: {
-              message: "No relevant documentation found for: " + query,
+              message: `No relevant documentation found for: ${query}`,
               results: [],
               latencyMs: response.latencyMs,
             },
@@ -83,7 +83,7 @@ export function createSearchDocsTool(options: SearchDocsOptions): ToolDefinition
 
         const resultCount = response.results.length;
         const latency = response.latencyMs;
-        const message = "Found " + resultCount + " sections (" + thoroughness + " search, " + latency + "ms)";
+        const message = `Found ${resultCount} sections (${thoroughness} search, ${latency}ms)`;
 
         return {
           success: true,
@@ -92,7 +92,7 @@ export function createSearchDocsTool(options: SearchDocsOptions): ToolDefinition
             results: response.results.map((r) => {
               const sourceFile = r.metadata.sourceFile ?? "unknown";
               const section = r.sectionPath?.join(" > ") ?? r.documentTitle ?? null;
-              const relevance = Math.round(r.score * 100) + "%";
+              const relevance = `${Math.round(r.score * 100)}%`;
 
               return {
                 content: r.content,
@@ -109,7 +109,7 @@ export function createSearchDocsTool(options: SearchDocsOptions): ToolDefinition
         return {
           success: false,
           output: {
-            error: "Search failed: " + errorMsg,
+            error: `Search failed: ${errorMsg}`,
           },
         };
       }

@@ -4,11 +4,11 @@
  */
 
 import { vectorSearch } from "../data/index.js";
-import type { RetrievalOptions, RetrievalResponse, RetrievalResult, Thoroughness } from "./types.js";
+import type { RetrievalOptions, RetrievalResponse, RetrievalResult } from "./types.js";
 
-export type { RetrievalOptions, RetrievalResponse, RetrievalResult, Thoroughness } from "./types.js";
-export { researchTopic } from "./agentic.js";
 export type { ResearchOptions, ResearchResult } from "./agentic.js";
+export { researchTopic } from "./agentic.js";
+export type { RetrievalOptions, RetrievalResponse, RetrievalResult, Thoroughness } from "./types.js";
 
 /**
  * Retrieve relevant documents for a query.
