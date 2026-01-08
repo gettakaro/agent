@@ -121,8 +121,6 @@ router.get(
         return;
       }
 
-      // Use retrieve function with thoroughness (defaults to 'balanced' if not specified)
-      const _startTime = Date.now();
       const response = await retrieve(kbId!, q, {
         thoroughness: thoroughness ?? "balanced",
         limit: limit ?? 5,
