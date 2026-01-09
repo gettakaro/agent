@@ -21,6 +21,17 @@ const configSchema = z.object({
     }),
   takaroUsername: z.string().optional(),
   takaroPassword: z.string().optional(),
+  // OpenTelemetry & Langfuse configuration
+  tracingEnabled: z
+    .string()
+    .optional()
+    .default("false")
+    .transform((s) => s === "true"),
+  takaroService: z.string().default("takaro-agent"),
+  langfuseSecretKey: z.string().optional(),
+  langfusePublicKey: z.string().optional(),
+  langfuseBaseUrl: z.string().url().default("https://cloud.langfuse.com"),
+  tracingEndpoint: z.string().url().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -36,6 +47,12 @@ function loadConfig(): Config {
     corsOrigins: process.env.CORS_ORIGINS,
     takaroUsername: process.env.TAKARO_USERNAME,
     takaroPassword: process.env.TAKARO_PASSWORD,
+    tracingEnabled: process.env.TRACING_ENABLED,
+    takaroService: process.env.TAKARO_SERVICE,
+    langfuseSecretKey: process.env.LANGFUSE_SECRET_KEY,
+    langfusePublicKey: process.env.LANGFUSE_PUBLIC_KEY,
+    langfuseBaseUrl: process.env.LANGFUSE_BASE_URL,
+    tracingEndpoint: process.env.TRACING_ENDPOINT,
   };
 
   const result = configSchema.safeParse(raw);
