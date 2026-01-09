@@ -77,7 +77,7 @@ export class MockLLMProvider implements ILLMProvider {
     tools: ToolDefinition[],
     options: ChatOptions,
     onChunk?: (chunk: StreamChunk) => void,
-    langfuseTrace?: LangfuseTraceClient,
+    _langfuseTrace?: LangfuseTraceClient,
   ): Promise<ProviderResponse> {
     this.callHistory.push({ messages: [...messages], systemPrompt, tools: [...tools], options });
 

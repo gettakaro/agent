@@ -12,9 +12,9 @@ import {
   startSyncWorker,
 } from "./knowledge/index.js";
 import { TakaroDocsFactory } from "./knowledge/takaro-docs/index.js";
+import { initializeLangfuse, shutdownLangfuse } from "./langfuse-client.js";
 import { closeRedis, initRedis } from "./redis/client.js";
 import { initServiceClient } from "./takaro/client.js";
-import { initializeLangfuse, shutdownLangfuse } from "./langfuse-client.js";
 
 async function main() {
   console.log("Starting Takaro Agent service");
