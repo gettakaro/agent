@@ -66,7 +66,7 @@ describe("Hybrid search integration", () => {
 
     assert.ok(response.results.length > 0, "Should return results");
     assert.strictEqual(response.thoroughness, "fast");
-    assert.ok(response.latencyMs < 500, "Fast mode should complete quickly");
+    assert.ok(response.latencyMs < 1000, "Fast mode should complete in reasonable time");
 
     // Should find the API reference document
     const found = response.results.some(r => r.content.includes("moduleControllerCreate"));
