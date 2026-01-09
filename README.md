@@ -128,6 +128,100 @@ npm run db:migrate
 npm run dev             # Build + watch mode
 ```
 
+## Observability
+
+This service uses **OpenTelemetry + Langfuse** for end-to-end tracing of agent conversations, LLM calls, and tool executions.
+
+### Setup
+
+Enable tracing in `.env`:
+
+```bash
+TRACING_ENABLED=true
+TAKARO_SERVICE=takaro-agent
+
+# Langfuse credentials
+LANGFUSE_SECRET_KEY=sk-lf-xxx
+LANGFUSE_PUBLIC_KEY=pk-lf-xxx
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+
+# Optional: Send traces to additional OTLP endpoint (e.g., Grafana Tempo)
+# TRACING_ENDPOINT=http://localhost:4318/v1/traces
+```
+
+### View Traces
+
+Open [https://cloud.langfuse.com](https://cloud.langfuse.com) to view:
+- **Conversation traces**: Full agent loops with iterations, tool calls, and LLM responses
+- **Token usage**: Input/output tokens per LLM call and total per conversation
+- **Latency metrics**: Time spent in agent iterations, tool execution, LLM calls
+- **Tool inputs/outputs**: Inspect what data was passed to tools and what they returned
+- **Error tracking**: Exceptions recorded with full stack traces
+
+### Trace Hierarchy
+
+```
+agent-conversation (Top-level trace)
+├── agent-iteration-1 (Span)
+│   ├── llm-chat-completion (LLM Generation)
+│   └── tool:createModule (Tool execution)
+├── agent-iteration-2 (Span)
+│   ├── llm-chat-completion (LLM Generation)
+│   └── tool:addCommand (Tool execution)
+└── agent-iteration-3 (Span)
+    └── llm-chat-completion (LLM Generation)
+```
+
+### Searching Traces
+
+In Langfuse, search by:
+- **Session ID**: Use conversation ID to find all turns in a conversation
+- **User ID**: Group conversations by authenticated user
+- **Agent tags**: Filter by agent type (e.g., `module-writer`) or version
+
+### Key Attributes
+
+Traces include these attributes for filtering and analysis:
+
+| Layer | Attributes |
+|-------|------------|
+| HTTP | `http.method`, `http.route`, `http.status_code`, `user.id` |
+| Agent | `conversation.id`, `agent.id`, `agent.version`, `iterations`, `latency_ms` |
+| LLM | `llm.provider`, `llm.model`, `llm.input_tokens`, `llm.output_tokens`, `llm.finish_reason` |
+| Tools | `tool.name`, `tool.input`, `tool.success`, `tool.error` |
+
+### Debugging Slow Conversations
+
+1. Find conversation ID from client or database
+2. Search Langfuse by `sessionId` (= conversationId)
+3. Inspect trace:
+   - How many iterations? (Should be <5 for simple tasks)
+   - Which tools took longest?
+   - Were there errors? (Check span status)
+4. Correlate with logs: `docker compose logs app | grep {conversationId}`
+
+### Troubleshooting Tracing
+
+**Traces don't appear in Langfuse:**
+1. Check credentials are correct in `.env`
+2. Wait 30-60 seconds for batch upload
+3. Check console for "[Tracing] Langfuse credential validation failed"
+4. Verify network connectivity to Langfuse cloud
+5. Try with `TRACING_ENDPOINT` to export to local collector (e.g., Jaeger)
+
+**Docker build fails with peer dependency errors:**
+
+The Dockerfile uses `--legacy-peer-deps` flag due to OpenTelemetry version differences between @langfuse/otel (0.202+) and @takaro/util (0.53). This is safe - versions are runtime compatible.
+
+**No tracing messages on startup:**
+
+Ensure `TRACING_ENABLED=true` in your `.env` file. The startup banner shows tracing configuration.
+
+**Performance impact:**
+- Auto-instrumentation adds ~1-2% CPU overhead
+- Langfuse batches traces (500ms interval) for minimal blocking
+- Health checks and static assets are filtered from traces
+
 ## Adding an Agent Experiment
 
 1. Create experiment config in `src/agents/{type}/experiments.ts`:

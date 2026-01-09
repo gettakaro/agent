@@ -5,9 +5,9 @@
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "tsx watch --import ./src/tracing-loader.ts src/main.ts",
     "build": "npm run build --workspace=packages/web-agent && tsc && cp -r packages/web-agent/dist dist/client",
-    "start": "node dist/main.js",
+    "start": "node --import ./dist/tracing-loader.js dist/main.js",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -23,6 +23,11 @@
     "test:filter": "USE_MOCK_PROVIDER=true node --import tsx --test --test-name-pattern"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.52.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.202.0",
+    "@opentelemetry/sdk-node": "^0.202.0",
+    "@opentelemetry/semantic-conventions": "^1.27.0",
     "@takaro/apiclient": "next",
     "@takaro/config": "next",
     "@takaro/db": "next",
@@ -37,6 +42,7 @@
     "express": "^4.21.2",
     "ioredis": "^5.8.2",
     "knex": "^3.1.0",
+    "langfuse": "^3.38.6",
     "openai": "^4.77.0",
     "pg": "^8.13.1",
     "redis": "^5.10.0",

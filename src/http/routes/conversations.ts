@@ -7,7 +7,8 @@ import { config } from "../../config.js";
 import { ConversationService } from "../../conversations/service.js";
 import { generateTitle } from "../../conversations/title-generator.js";
 import { CustomAgentService, createAgentFromCustom } from "../../custom-agents/index.js";
-import { formatError } from "../../utils/formatError.js";
+import { formatError, logError } from "../../utils/formatError.js";
+import { validateUuidParam } from "../../utils/validateUuid.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { createConversationSchema, sendMessageSchema } from "../schemas/conversations.js";
@@ -26,7 +27,7 @@ router.get("/", async (req: AuthenticatedRequest, res: Response) => {
     const conversations = await conversationService.listByUserId(req.user!.id);
     res.json({ data: conversations });
   } catch (error) {
-    console.error("Error listing conversations:", formatError(error));
+    logError("Error listing conversations:", error);
     res.status(500).json({ error: "Failed to list conversations" });
   }
 });
@@ -112,7 +113,7 @@ router.post("/", validate(createConversationSchema), async (req: AuthenticatedRe
 
     res.json({ data: conversation });
   } catch (error) {
-    console.error("Error creating conversation:", formatError(error));
+    logError("Error creating conversation:", error);
     const message = error instanceof Error ? error.message : "Failed to create conversation";
     res.status(500).json({ error: message });
   }
@@ -121,6 +122,12 @@ router.post("/", validate(createConversationSchema), async (req: AuthenticatedRe
 // Get conversation
 router.get("/:id", async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const validationError = validateUuidParam("conversation ID", req.params.id!);
+    if (validationError) {
+      res.status(400).json(validationError);
+      return;
+    }
+
     const conversation = await conversationService.get(req.params.id!);
     if (!conversation) {
       res.status(404).json({ error: "Conversation not found" });
@@ -135,7 +142,7 @@ router.get("/:id", async (req: AuthenticatedRequest, res: Response) => {
 
     res.json({ data: conversation });
   } catch (error) {
-    console.error("Error getting conversation:", formatError(error));
+    logError("Error getting conversation:", error);
     res.status(500).json({ error: "Failed to get conversation" });
   }
 });
@@ -143,6 +150,12 @@ router.get("/:id", async (req: AuthenticatedRequest, res: Response) => {
 // Delete conversation
 router.delete("/:id", async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const validationError = validateUuidParam("conversation ID", req.params.id!);
+    if (validationError) {
+      res.status(400).json(validationError);
+      return;
+    }
+
     const conversation = await conversationService.get(req.params.id!);
     if (!conversation) {
       res.status(404).json({ error: "Conversation not found" });
@@ -158,7 +171,7 @@ router.delete("/:id", async (req: AuthenticatedRequest, res: Response) => {
     await conversationService.delete(req.params.id!);
     res.json({ success: true });
   } catch (error) {
-    console.error("Error deleting conversation:", formatError(error));
+    logError("Error deleting conversation:", error);
     res.status(500).json({ error: "Failed to delete conversation" });
   }
 });
@@ -166,6 +179,12 @@ router.delete("/:id", async (req: AuthenticatedRequest, res: Response) => {
 // Get messages
 router.get("/:id/messages", async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const validationError = validateUuidParam("conversation ID", req.params.id!);
+    if (validationError) {
+      res.status(400).json(validationError);
+      return;
+    }
+
     const conversation = await conversationService.get(req.params.id!);
     if (!conversation) {
       res.status(404).json({ error: "Conversation not found" });
@@ -181,7 +200,7 @@ router.get("/:id/messages", async (req: AuthenticatedRequest, res: Response) => 
     const messages = await conversationService.getMessages(req.params.id!);
     res.json({ data: messages });
   } catch (error) {
-    console.error("Error getting messages:", formatError(error));
+    logError("Error getting messages:", error);
     res.status(500).json({ error: "Failed to get messages" });
   }
 });
@@ -190,6 +209,12 @@ router.get("/:id/messages", async (req: AuthenticatedRequest, res: Response) => 
 router.post("/:id/messages", validate(sendMessageSchema), async (req: AuthenticatedRequest, res: Response) => {
   const conversationId = req.params.id!;
   const { content } = req.body;
+
+  const validationError = validateUuidParam("conversation ID", conversationId);
+  if (validationError) {
+    res.status(400).json(validationError);
+    return;
+  }
 
   let sseStarted = false;
 
@@ -288,7 +313,7 @@ router.post("/:id/messages", validate(sendMessageSchema), async (req: Authentica
 
     res.end();
   } catch (error) {
-    console.error("Error processing message:", formatError(error));
+    logError("Error processing message:", error);
     const message = error instanceof Error ? error.message : "Failed to process message";
 
     if (sseStarted) {
@@ -311,7 +336,7 @@ router.get("/by-agent/:agentId", async (req: AuthenticatedRequest, res: Response
 
     res.json({ data: conversations });
   } catch (error) {
-    console.error("Error listing conversations by agent:", formatError(error));
+    logError("Error listing conversations by agent:", error);
     res.status(500).json({ error: "Failed to list conversations" });
   }
 });

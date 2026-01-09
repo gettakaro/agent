@@ -1,3 +1,4 @@
+import type { LangfuseTraceClient } from "langfuse";
 import type { Message, StreamChunk, ToolDefinition } from "../types.js";
 
 export interface ChatOptions {
@@ -13,6 +14,7 @@ export interface ILLMProvider {
     tools: ToolDefinition[],
     options: ChatOptions,
     onChunk?: (chunk: StreamChunk) => void,
+    langfuseTrace?: LangfuseTraceClient,
   ): Promise<ProviderResponse>;
 }
 

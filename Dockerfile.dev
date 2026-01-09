@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY packages/web-agent/package.json ./packages/web-agent/
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 COPY . .
 

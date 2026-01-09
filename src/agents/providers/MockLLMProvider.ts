@@ -1,3 +1,4 @@
+import type { LangfuseTraceClient } from "langfuse";
 import type { Message, StreamChunk, ToolDefinition } from "../types.js";
 import type { ChatOptions, ILLMProvider, ProviderResponse } from "./types.js";
 
@@ -76,6 +77,7 @@ export class MockLLMProvider implements ILLMProvider {
     tools: ToolDefinition[],
     options: ChatOptions,
     onChunk?: (chunk: StreamChunk) => void,
+    _langfuseTrace?: LangfuseTraceClient,
   ): Promise<ProviderResponse> {
     this.callHistory.push({ messages: [...messages], systemPrompt, tools: [...tools], options });
 

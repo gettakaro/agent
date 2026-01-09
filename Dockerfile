@@ -5,7 +5,7 @@ WORKDIR /app
 # Copy package files for all workspaces
 COPY package*.json ./
 COPY packages/web-agent/package*.json ./packages/web-agent/
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copy source
 COPY tsconfig.json ./
@@ -23,7 +23,7 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
 
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --legacy-peer-deps --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
 
@@ -34,4 +34,4 @@ EXPOSE 3100
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3100/health || exit 1
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "--import", "./dist/tracing-loader.js", "dist/main.js"]

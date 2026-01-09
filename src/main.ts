@@ -12,14 +12,18 @@ import {
   startSyncWorker,
 } from "./knowledge/index.js";
 import { TakaroDocsFactory } from "./knowledge/takaro-docs/index.js";
+import { initializeLangfuse, shutdownLangfuse } from "./langfuse-client.js";
 import { closeRedis, initRedis } from "./redis/client.js";
 import { initServiceClient } from "./takaro/client.js";
 
 async function main() {
-  console.log("Starting Takaro Agent service...");
+  console.log("Starting Takaro Agent service");
 
   // Initialize Takaro client (service account mode if credentials provided)
   await initServiceClient();
+
+  // Initialize Langfuse SDK for LLM tracing
+  initializeLangfuse();
 
   // Register agents
   agentRegistry.register(new ModuleWriterFactory());
@@ -74,6 +78,7 @@ async function main() {
   const shutdown = async () => {
     console.log("Shutting down...");
     server.close();
+    await shutdownLangfuse();
     await kbWorker.close();
     await closeSyncQueue();
     await closeKBRedis();

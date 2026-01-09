@@ -1,5 +1,7 @@
+import type { LangfuseGenerationClient, LangfuseTraceClient } from "langfuse";
 import OpenAI from "openai";
 import type { Stream } from "openai/streaming";
+import { getLangfuseClient } from "../../langfuse-client.js";
 import { formatError } from "../../utils/formatError.js";
 import type { Message, StreamChunk, ToolDefinition } from "../types.js";
 import type { ChatOptions, ILLMProvider, ProviderResponse } from "./types.js";
@@ -20,7 +22,29 @@ export class OpenRouterProvider implements ILLMProvider {
     tools: ToolDefinition[],
     options: ChatOptions,
     onChunk?: (chunk: StreamChunk) => void,
+    langfuseTrace?: LangfuseTraceClient,
   ): Promise<ProviderResponse> {
+    const langfuse = getLangfuseClient();
+    let generation: LangfuseGenerationClient | null = null;
+
+    // Create Langfuse generation if trace exists
+    if (langfuse && langfuseTrace) {
+      generation = langfuseTrace.generation({
+        name: "llm-chat-completion",
+        model: options.model,
+        modelParameters: {
+          ...(options.temperature !== undefined && { temperature: options.temperature }),
+          ...(options.maxTokens !== undefined && { maxTokens: options.maxTokens }),
+        },
+        input: {
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+          ],
+        },
+      });
+    }
+
     const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: "system", content: systemPrompt },
       ...messages.map((m) => ({
@@ -60,9 +84,7 @@ export class OpenRouterProvider implements ILLMProvider {
       input: Record<string, unknown>;
     }> = [];
 
-    // Track tool calls being built up from deltas
     const toolCallBuilders = new Map<number, { id: string; name: string; arguments: string }>();
-
     let finishReason: string | null = null;
     let promptTokens = 0;
     let completionTokens = 0;
@@ -71,13 +93,11 @@ export class OpenRouterProvider implements ILLMProvider {
       const delta = chunk.choices[0]?.delta;
       finishReason = chunk.choices[0]?.finish_reason || finishReason;
 
-      // Track usage if provided
       if (chunk.usage) {
         promptTokens = chunk.usage.prompt_tokens;
         completionTokens = chunk.usage.completion_tokens;
       }
 
-      // Handle text content
       if (delta?.content) {
         textContent += delta.content;
         if (onChunk) {
@@ -85,7 +105,6 @@ export class OpenRouterProvider implements ILLMProvider {
         }
       }
 
-      // Handle tool calls
       if (delta?.tool_calls) {
         for (const toolCallDelta of delta.tool_calls) {
           const index = toolCallDelta.index;
@@ -113,7 +132,6 @@ export class OpenRouterProvider implements ILLMProvider {
       }
     }
 
-    // Finalize tool calls
     for (const builder of toolCallBuilders.values()) {
       const input = JSON.parse(builder.arguments || "{}") as Record<string, unknown>;
       toolCalls.push({
@@ -132,6 +150,24 @@ export class OpenRouterProvider implements ILLMProvider {
       }
     }
 
+    // Update Langfuse generation with output
+    if (generation) {
+      generation.update({
+        output: {
+          content: textContent,
+          tool_calls: toolCalls,
+        },
+        usage: {
+          input: promptTokens,
+          output: completionTokens,
+        },
+      });
+      generation.end();
+    }
+
+    const stopReason =
+      finishReason === "tool_calls" ? "tool_use" : finishReason === "length" ? "max_tokens" : "end_turn";
+
     return {
       content: textContent,
       toolCalls,
@@ -139,7 +175,7 @@ export class OpenRouterProvider implements ILLMProvider {
         inputTokens: promptTokens,
         outputTokens: completionTokens,
       },
-      stopReason: finishReason === "tool_calls" ? "tool_use" : finishReason === "length" ? "max_tokens" : "end_turn",
+      stopReason: stopReason as "tool_use" | "max_tokens" | "end_turn",
     };
   }
 }

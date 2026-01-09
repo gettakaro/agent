@@ -23,3 +23,33 @@ export function formatError(err: unknown): string {
   // Regular Error or unknown
   return err instanceof Error ? err.message : String(err);
 }
+
+/**
+ * Get HTTP status code from error if available
+ */
+function getErrorStatus(err: unknown): number | undefined {
+  const e = err as AxiosLikeError;
+  return e.response?.status;
+}
+
+/**
+ * Check if error is a client error (4xx status code)
+ */
+function isClientError(err: unknown): boolean {
+  const status = getErrorStatus(err);
+  return status !== undefined && status >= 400 && status < 500;
+}
+
+/**
+ * Log error at appropriate level based on status code
+ * - 4xx (client errors): console.warn
+ * - 5xx (server errors) or unknown: console.error
+ */
+export function logError(prefix: string, err: unknown): void {
+  const message = `${prefix} ${formatError(err)}`;
+  if (isClientError(err)) {
+    console.warn(message);
+  } else {
+    console.error(message);
+  }
+}
