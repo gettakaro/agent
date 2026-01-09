@@ -7,6 +7,7 @@ import {
   useKnowledgeBaseSearchQuery,
   useSyncKnowledgeBaseMutation,
 } from '../queries/knowledge';
+import { getErrorMessage } from '../api/client';
 
 export const Route = createFileRoute('/knowledge/$kbId')({
   component: KnowledgeDetailPage,
@@ -234,6 +235,12 @@ const SearchInput = styled.input`
     outline: none;
     border-color: ${({ theme }) => theme.colors.primary};
   }
+`;
+
+const SearchHelperText = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.textAlt};
+  margin-top: 0.5rem;
 `;
 
 const SearchResults = styled.div`
@@ -488,6 +495,9 @@ function KnowledgeDetailPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery.length < 2 && searchQuery.length > 0 && (
+            <SearchHelperText>Type at least 2 characters to search</SearchHelperText>
+          )}
         </SearchContainer>
         {searchQuery.length >= 2 && (
           <SearchResults>
@@ -500,7 +510,7 @@ function KnowledgeDetailPage() {
                 <ErrorContent>
                   <ErrorTitle>Search failed</ErrorTitle>
                   <ErrorMessage>
-                    {searchError instanceof Error ? searchError.message : 'An error occurred while searching'}
+                    {getErrorMessage(searchError)}
                   </ErrorMessage>
                 </ErrorContent>
               </SearchErrorState>

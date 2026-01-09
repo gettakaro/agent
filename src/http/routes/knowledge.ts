@@ -10,7 +10,7 @@ import {
   retrieve,
 } from "../../knowledge/index.js";
 import type { Thoroughness } from "../../knowledge/retrieval/types.js";
-import { formatError } from "../../utils/formatError.js";
+import { formatError, logError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 import { validateQuery } from "../middleware/validate.js";
 import { searchKnowledgeQuerySchema } from "../schemas/knowledge.js";
@@ -134,7 +134,7 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error searching knowledge base:", formatError(error));
+      logError("Error searching knowledge base:", error);
 
       const errorMessage = error instanceof Error ? error.message : String(error);
 
