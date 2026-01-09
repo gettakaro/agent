@@ -1,10 +1,15 @@
+import { buildContextualPrefix, extractMarkdownStructure, getSectionPath, type MarkdownStructure } from "./metadata.js";
+
 export interface Chunk {
   content: string;
+  contentWithContext: string;
   index: number;
   metadata: {
     sourceFile: string;
     chunkIndex: number;
     totalChunks: number;
+    documentTitle?: string;
+    sectionPath?: string[];
   };
 }
 
@@ -18,21 +23,39 @@ export interface ChunkOptions {
 }
 
 /**
- * Split text into overlapping chunks.
+ * Split text into overlapping chunks with contextual metadata.
+ * For markdown files, extracts document structure and prepends context to each chunk.
  * Tries to break at paragraph or sentence boundaries when possible.
  */
 export function chunkText(text: string, sourceFile: string, options: ChunkOptions = {}): Chunk[] {
   const { chunkSize = 1000, overlap = 200, minChunkSize = 50 } = options;
 
+  // Extract markdown structure if this is a markdown file
+  const isMarkdown = sourceFile.endsWith(".md");
+  let mdStructure: MarkdownStructure | null = null;
+
+  if (isMarkdown) {
+    mdStructure = extractMarkdownStructure(text, sourceFile);
+  }
+
+  // Handle single chunk case
   if (text.length <= chunkSize) {
+    const sectionPath = mdStructure ? getSectionPath(mdStructure.sections, 0) : undefined;
+    const contextualContent = mdStructure
+      ? buildContextualPrefix(mdStructure.title, sectionPath || []) + text.trim()
+      : text.trim();
+
     return [
       {
         content: text.trim(),
+        contentWithContext: contextualContent,
         index: 0,
         metadata: {
           sourceFile,
           chunkIndex: 0,
           totalChunks: 1,
+          documentTitle: mdStructure?.title,
+          sectionPath,
         },
       },
     ];
@@ -68,15 +91,27 @@ export function chunkText(text: string, sourceFile: string, options: ChunkOption
     }
 
     const content = text.slice(start, end).trim();
+
     // Only keep chunks that meet minimum size requirement
     if (content.length >= minChunkSize) {
+      // Determine section path for this chunk's position
+      const sectionPath = mdStructure ? getSectionPath(mdStructure.sections, start) : undefined;
+
+      // Build contextual content with document structure
+      const contentWithContext = mdStructure
+        ? buildContextualPrefix(mdStructure.title, sectionPath || []) + content
+        : content;
+
       chunks.push({
         content,
+        contentWithContext,
         index: chunks.length,
         metadata: {
           sourceFile,
           chunkIndex: chunks.length,
           totalChunks: 0, // Will be set after all chunks are created
+          documentTitle: mdStructure?.title,
+          sectionPath,
         },
       });
     }

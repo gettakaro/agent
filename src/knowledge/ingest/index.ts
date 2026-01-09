@@ -1,5 +1,5 @@
+import { deleteByKnowledgeBase, upsertDocuments } from "../index.js";
 import type { Document, IngestResult } from "../types.js";
-import { deleteByKnowledgeBase, upsertDocuments } from "../vectorStore.js";
 import { type ChunkOptions, chunkText } from "./chunker.js";
 import { fetchFileContent, listGitHubFiles, parseGitHubUrl } from "./github.js";
 
@@ -58,13 +58,19 @@ export async function ingestFromGitHub(
     // Fetch single file content
     const content = await fetchFileContent(parsed.owner, parsed.repo, parsed.branch, filePath);
 
-    // Chunk single file
+    // Chunk single file with contextual metadata extraction
     const chunks = chunkText(content, filePath, { chunkSize, overlap });
 
     // Convert to documents and insert (embeddings generated inside)
+    // Include all new contextual chunk fields in metadata for upsertDocuments
     const documents: Document[] = chunks.map((chunk) => ({
       content: chunk.content,
-      metadata: chunk.metadata,
+      metadata: {
+        ...chunk.metadata,
+        contentWithContext: chunk.contentWithContext,
+        documentTitle: chunk.metadata.documentTitle,
+        sectionPath: chunk.metadata.sectionPath,
+      },
     }));
 
     await upsertDocuments(knowledgeBaseId, version, documents);

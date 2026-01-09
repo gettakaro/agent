@@ -147,4 +147,14 @@ export interface SearchResult {
   content: string;
   metadata: Record<string, unknown>;
   score: number;
+  contentWithContext?: string;
+  documentTitle?: string;
+  sectionPath?: string[];
+}
+
+// Knowledge base search response wrapper
+export interface SearchResponse {
+  results: SearchResult[];
+  thoroughness: 'fast' | 'balanced' | 'thorough';
+  latencyMs: number;
 }

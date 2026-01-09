@@ -1,9 +1,9 @@
 import { Worker } from "bullmq";
+import { deleteBySourceFile, upsertDocuments } from "../index.js";
 import { chunkText } from "../ingest/chunker.js";
 import { fetchFileContent, getChangedFiles, getLatestCommitSha, parseGitHubUrl } from "../ingest/github.js";
 import { ingestFromGitHub } from "../ingest/index.js";
 import type { Document } from "../types.js";
-import { deleteBySourceFile, upsertDocuments } from "../vectorStore.js";
 import { getRedisConnection } from "./connection.js";
 import { KB_SYNC_QUEUE, type KBSyncJobData, type KBSyncResult } from "./queue.js";
 import { getLastCommitSha, setLastCommitSha } from "./syncState.js";
@@ -90,7 +90,12 @@ export function startSyncWorker(): Worker<KBSyncJobData, KBSyncResult> {
 
           const documents: Document[] = chunks.map((chunk) => ({
             content: chunk.content,
-            metadata: chunk.metadata,
+            metadata: {
+              ...chunk.metadata,
+              contentWithContext: chunk.contentWithContext,
+              documentTitle: chunk.metadata.documentTitle,
+              sectionPath: chunk.metadata.sectionPath,
+            },
           }));
 
           await upsertDocuments(knowledgeBaseId, version, documents);

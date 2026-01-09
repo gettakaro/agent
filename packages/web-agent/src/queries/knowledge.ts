@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
-import type { KnowledgeBase, Agent, SearchResult } from '../api/types';
+import type { KnowledgeBase, Agent, SearchResult, SearchResponse } from '../api/types';
 
 export const knowledgeKeys = {
   all: ['knowledge'] as const,
@@ -72,11 +72,11 @@ export function useKnowledgeBaseSearchQuery(kbId: string | undefined, query: str
     queryKey: knowledgeKeys.search(kbId || '', query),
     queryFn: async () => {
       if (!kbId) throw new Error('Knowledge base ID required');
-      const response = await apiClient.get<{ data: SearchResult[] }>(
+      const response = await apiClient.get<{ data: SearchResponse }>(
         `/api/knowledge-bases/${kbId}/search`,
         { params: { q: query, limit: 10 } }
       );
-      return response.data.data;
+      return response.data.data.results;
     },
     enabled: !!kbId && query.length >= 2,
   });

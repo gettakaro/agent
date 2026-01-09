@@ -7,9 +7,10 @@ import {
   getLastSyncTime,
   getSyncQueue,
   knowledgeRegistry,
-  vectorSearch,
+  retrieve,
 } from "../../knowledge/index.js";
-import { formatError } from "../../utils/formatError.js";
+import type { Thoroughness } from "../../knowledge/retrieval/types.js";
+import { formatError, logError } from "../../utils/formatError.js";
 import { type AuthenticatedRequest, authMiddleware } from "../middleware/auth.js";
 import { validateQuery } from "../middleware/validate.js";
 import { searchKnowledgeQuerySchema } from "../schemas/knowledge.js";
@@ -108,7 +109,11 @@ router.get(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { kbId } = req.params;
-      const { q, limit } = req.query as unknown as { q: string; limit?: number };
+      const { q, limit, thoroughness } = req.query as unknown as {
+        q: string;
+        limit?: number;
+        thoroughness?: Thoroughness;
+      };
 
       const factory = knowledgeRegistry.getFactory(kbId!);
       if (!factory) {
@@ -116,14 +121,37 @@ router.get(
         return;
       }
 
-      const results = await vectorSearch(kbId!, q, {
+      const response = await retrieve(kbId!, q, {
+        thoroughness: thoroughness ?? "balanced",
         limit: limit ?? 5,
       });
 
-      res.json({ data: results });
+      res.json({
+        data: {
+          results: response.results,
+          thoroughness: response.thoroughness,
+          latencyMs: response.latencyMs,
+        },
+      });
     } catch (error) {
-      console.error("Error searching knowledge base:", formatError(error));
-      res.status(500).json({ error: "Failed to search knowledge base" });
+      logError("Error searching knowledge base:", error);
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes("OPENROUTER_API_KEY")) {
+        res.status(503).json({
+          error: "Search is temporarily unavailable. Please try again later.",
+        });
+      } else if (errorMessage.includes("relation") || errorMessage.includes("does not exist")) {
+        res.status(500).json({
+          error: "Search is temporarily unavailable. Please contact support.",
+        });
+      } else {
+        res.status(500).json({
+          error: "Failed to search. Please try again or contact support if this continues.",
+          details: process.env.NODE_ENV === "development" ? errorMessage : undefined,
+        });
+      }
     }
   },
 );
