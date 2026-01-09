@@ -34,24 +34,30 @@ export async function retrieve(
 
   let results: RetrievalResult[];
 
-  switch (thoroughness) {
-    case "fast":
-      // Fast mode: Vector search only
-      results = await fastRetrieve(knowledgeBaseId, query, limit, minScore);
-      break;
+  try {
+    switch (thoroughness) {
+      case "fast":
+        // Fast mode: Vector search only
+        results = await fastRetrieve(knowledgeBaseId, query, limit, minScore);
+        break;
 
-    case "balanced":
-      // Balanced mode: Hybrid search (vector + keyword + RRF)
-      results = await balancedRetrieve(knowledgeBaseId, query, limit, minScore);
-      break;
+      case "balanced":
+        // Balanced mode: Hybrid search (vector + keyword + RRF)
+        results = await balancedRetrieve(knowledgeBaseId, query, limit, minScore);
+        break;
 
-    case "thorough":
-      // Thorough mode: Hybrid search + LLM reranking
-      results = await thoroughRetrieve(knowledgeBaseId, query, limit, minScore);
-      break;
+      case "thorough":
+        // Thorough mode: Hybrid search + LLM reranking
+        results = await thoroughRetrieve(knowledgeBaseId, query, limit, minScore);
+        break;
 
-    default:
-      throw new Error(`Unknown thoroughness level: ${thoroughness}`);
+      default:
+        throw new Error(`Unknown thoroughness level: ${thoroughness}`);
+    }
+  } catch (error) {
+    console.error(`[Retrieval] ${thoroughness} mode failed:`, error);
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Search failed: ${message}`);
   }
 
   const latencyMs = Date.now() - startTime;

@@ -135,7 +135,23 @@ router.get(
       });
     } catch (error) {
       console.error("Error searching knowledge base:", formatError(error));
-      res.status(500).json({ error: "Failed to search knowledge base" });
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes("OPENROUTER_API_KEY")) {
+        res.status(503).json({
+          error: "Search is temporarily unavailable. Please try again later.",
+        });
+      } else if (errorMessage.includes("relation") || errorMessage.includes("does not exist")) {
+        res.status(500).json({
+          error: "Search is temporarily unavailable. Please contact support.",
+        });
+      } else {
+        res.status(500).json({
+          error: "Failed to search. Please try again or contact support if this continues.",
+          details: process.env.NODE_ENV === "development" ? errorMessage : undefined,
+        });
+      }
     }
   },
 );

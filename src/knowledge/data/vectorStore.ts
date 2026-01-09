@@ -51,15 +51,25 @@ export async function vectorSearch(
     .orderByRaw("embedding <=> ?::vector", [`[${queryEmbedding.join(",")}]`])
     .limit(limit);
 
-  return results.map((row: any) => ({
-    id: row.id,
-    content: row.content,
-    contentWithContext: row.content_with_context,
-    documentTitle: row.document_title,
-    sectionPath: row.section_path,
-    metadata: typeof row.metadata === "string" ? JSON.parse(row.metadata) : row.metadata,
-    similarity: row.similarity,
-  }));
+  return results.map((row: any) => {
+    let metadata = {};
+    try {
+      metadata = typeof row.metadata === "string" ? JSON.parse(row.metadata) : row.metadata;
+    } catch (error) {
+      console.error(`Failed to parse metadata for chunk ${row.id}:`, error);
+      metadata = { parseError: true };
+    }
+
+    return {
+      id: row.id,
+      content: row.content,
+      contentWithContext: row.content_with_context,
+      documentTitle: row.document_title,
+      sectionPath: row.section_path,
+      metadata,
+      similarity: row.similarity,
+    };
+  });
 }
 
 /**

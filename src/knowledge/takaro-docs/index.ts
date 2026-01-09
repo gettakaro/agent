@@ -4,7 +4,7 @@ import type { IKnowledgeBaseFactory, IngestionConfig, KnowledgeBase } from "../t
 const KNOWLEDGE_BASE_ID = "takaro-docs";
 const DEFAULT_VERSION = "latest";
 
-const GITHUB_SOURCE = "https://github.com/gettakaro/takaro/tree/development/packages/web-docs/docs";
+const GITHUB_SOURCE = "https://github.com/gettakaro/docs";
 
 /**
  * Factory for creating Takaro documentation knowledge base instances.
