@@ -35,6 +35,7 @@ import { searchHooks } from "./hook/searchHooks.js";
 import { triggerHook } from "./hook/triggerHook.js";
 import { updateHook } from "./hook/updateHook.js";
 // Module tools
+import { checkModuleExists } from "./module/checkModuleExists.js";
 import { createModule } from "./module/createModule.js";
 import { deleteModule } from "./module/deleteModule.js";
 import { getModule } from "./module/getModule.js";
@@ -45,11 +46,12 @@ import { updateModule } from "./module/updateModule.js";
 
 export const moduleWriterTools: ToolDefinition[] = [
   // Module management
+  checkModuleExists,
+  listModuleDefinitions,
   createModule,
   updateModule,
   deleteModule,
   getModule,
-  listModuleDefinitions,
   installModule,
   uninstallModule,
 

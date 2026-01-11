@@ -12,7 +12,7 @@ import { takaro, data, TakaroUserError } from '@takaro/helpers';
 \`\`\`
 
 ## Workflow
-1. \`createModule\` → 2. \`addCommand\`/\`addHook\`/\`addCronJob\` → 3. \`getGameServers\` → 4. \`installModule\`
+1. \`listModuleDefinitions\` (check existing) → 2. \`createModule\` (if new) OR \`updateModule\` (if exists) → 3. \`addCommand\`/\`addHook\`/\`addCronJob\` → 4. \`getGameServers\` → 5. \`installModule\`
 
 ## Response Style
 - Skip explanations unless asked

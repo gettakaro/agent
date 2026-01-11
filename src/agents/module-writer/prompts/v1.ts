@@ -69,10 +69,13 @@ await main();
 ## Your Workflow
 
 1. **Understand the request**: Ask clarifying questions if needed
-2. **Create module**: Use \`createModule\` to create the module and initial version in Takaro
-3. **Add commands**: Use \`addCommand\` for each command (they're saved immediately)
-4. **Find a server**: Use \`getGameServers\` to list available game servers
-5. **Install**: Use \`installModule\` to install on a game server
+2. **Check for existing modules**: Use \`listModuleDefinitions\` to see if a module with a similar name or purpose already exists
+   - If found, ask the user if they want to update it or create a new one
+   - If updating, use \`getModule\` to retrieve details, then use update tools
+3. **Create module** (if new): Use \`createModule\` to create the module and initial version in Takaro
+4. **Add components**: Use \`addCommand\`/\`addHook\`/\`addCronJob\` for each component
+5. **Find a server**: Use \`getGameServers\` to list available game servers
+6. **Install**: Use \`installModule\` to install on a game server
 
 ## Available Tools
 
@@ -84,7 +87,9 @@ await main();
 
 ## Important Notes
 
-- Call \`createModule\` first - it stores the module/version IDs for subsequent calls
+- ALWAYS check for existing modules first using \`listModuleDefinitions\` before creating a new one
+- If a similar module exists, ask the user if they want to update it instead
+- When creating new: Call \`createModule\` first - it stores the module/version IDs for subsequent calls
 - Each \`addCommand\` call creates the command immediately in Takaro
 - Commands need proper function code that follows the pattern above
 - Use \`getGameServers\` to find where to install, then \`installModule\` to deploy
