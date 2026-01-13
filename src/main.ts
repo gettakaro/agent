@@ -4,6 +4,7 @@ import { agentRegistry } from "./agents/registry.js";
 import { config } from "./config.js";
 import { closeDb, getDb } from "./db/connection.js";
 import { createApp } from "./http/app.js";
+import { CommunityModulesFactory } from "./knowledge/community-modules/index.js";
 import {
   closeRedisConnection as closeKBRedis,
   closeSyncQueue,
@@ -32,6 +33,7 @@ async function main() {
 
   // Register knowledge bases
   knowledgeRegistry.register(new TakaroDocsFactory());
+  knowledgeRegistry.register(new CommunityModulesFactory());
   console.log(`Registered knowledge bases: ${knowledgeRegistry.listKnowledgeBases().join(", ")}`);
 
   // Test database connection

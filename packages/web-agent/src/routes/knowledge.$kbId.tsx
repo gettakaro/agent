@@ -7,6 +7,7 @@ import {
   useKnowledgeBaseSearchQuery,
   useSyncKnowledgeBaseMutation,
 } from '../queries/knowledge';
+import { getErrorMessage } from '../api/client';
 
 export const Route = createFileRoute('/knowledge/$kbId')({
   component: KnowledgeDetailPage,
@@ -236,6 +237,12 @@ const SearchInput = styled.input`
   }
 `;
 
+const SearchHelperText = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.textAlt};
+  margin-top: 0.5rem;
+`;
+
 const SearchResults = styled.div`
   display: flex;
   flex-direction: column;
@@ -287,6 +294,67 @@ const EmptyState = styled.div`
   font-size: 0.875rem;
 `;
 
+const SearchErrorState = styled.div`
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.error + '11'};
+  border: 1px solid ${({ theme }) => theme.colors.error + '33'};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  color: ${({ theme }) => theme.colors.error};
+  font-size: 0.875rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  svg {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 0.125rem;
+  }
+`;
+
+const ErrorContent = styled.div`
+  flex: 1;
+`;
+
+const ErrorTitle = styled.div`
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+`;
+
+const ErrorMessage = styled.div`
+  opacity: 0.9;
+`;
+
+const SearchLoadingState = styled.div`
+  padding: 1.5rem;
+  text-align: center;
+  color: ${({ theme }) => theme.colors.textAlt};
+  background: ${({ theme }) => theme.colors.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.colors.shade};
+  border-radius: ${({ theme }) => theme.borderRadius.medium};
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+`;
+
+const Spinner = styled.div`
+  width: 16px;
+  height: 16px;
+  border: 2px solid ${({ theme }) => theme.colors.shade};
+  border-top-color: ${({ theme }) => theme.colors.primary};
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString(undefined, {
@@ -304,7 +372,7 @@ function KnowledgeDetailPage() {
 
   const { data: kb, isLoading, error } = useKnowledgeBaseQuery(kbId);
   const { data: agents } = useKnowledgeBaseAgentsQuery(kbId);
-  const { data: searchResults } = useKnowledgeBaseSearchQuery(kbId, searchQuery);
+  const { data: searchResults, error: searchError, isLoading: isSearching } = useKnowledgeBaseSearchQuery(kbId, searchQuery);
   const syncMutation = useSyncKnowledgeBaseMutation();
 
   const handleSync = () => {
@@ -427,10 +495,31 @@ function KnowledgeDetailPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery.length < 2 && searchQuery.length > 0 && (
+            <SearchHelperText>Type at least 2 characters to search</SearchHelperText>
+          )}
         </SearchContainer>
         {searchQuery.length >= 2 && (
           <SearchResults>
-            {!searchResults || searchResults.length === 0 ? (
+            {searchError ? (
+              <SearchErrorState>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4m0 4h.01" />
+                </svg>
+                <ErrorContent>
+                  <ErrorTitle>Search failed</ErrorTitle>
+                  <ErrorMessage>
+                    {getErrorMessage(searchError)}
+                  </ErrorMessage>
+                </ErrorContent>
+              </SearchErrorState>
+            ) : isSearching ? (
+              <SearchLoadingState>
+                <Spinner />
+                <span>Searching...</span>
+              </SearchLoadingState>
+            ) : !searchResults || searchResults.length === 0 ? (
               <EmptyState>No results found for "{searchQuery}"</EmptyState>
             ) : (
               searchResults.map((result, index) => (
